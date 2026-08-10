@@ -10,13 +10,19 @@ window.addEventListener("unhandledrejection", (event) => console.error("Jbad Edi
 const $ = (id) => document.getElementById(id);
 const authModal = $("authModal");
 const dashboardModal = $("dashboardModal");
+const resetPasswordModal = $("resetPasswordModal");
 let authMode = "signup";
+
+function siteUrl(){
+  return window.location.origin + window.location.pathname;
+}
 
 function showModal(el){ el.classList.remove("hidden"); }
 function hideModal(el){ el.classList.add("hidden"); }
 
 $("closeAuth").onclick = () => hideModal(authModal);
 $("closeDashboard").onclick = () => hideModal(dashboardModal);
+$("closeResetPassword").onclick = () => hideModal(resetPasswordModal);
 $("joinButton").onclick = () => { if (!configured) { alert("Jbad Editing is not connected to Supabase yet. Open supabase-config.js, add your Project URL and public/publishable key, save it, then reload the site."); return; } setAuthMode("signup"); showModal(authModal); };
 $("authButton").onclick = async () => {
   if (!configured) { alert("Jbad Editing is not connected to Supabase yet. Open supabase-config.js, add your Project URL and public/publishable key, save it, then reload the site."); return; }
@@ -39,6 +45,39 @@ function setAuthMode(mode){
   $("authMessage").textContent = "";
 }
 $("toggleAuthMode").onclick = () => setAuthMode(authMode === "login" ? "signup" : "login");
+$("forgotPassword").onclick = async () => {
+  if (!supabase) return;
+  const email = $("email").value.trim();
+  if (!email) {
+    $("authMessage").textContent = "Enter your email address first.";
+    $("email").focus();
+    return;
+  }
+  $("authMessage").textContent = "Sending recovery email…";
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: siteUrl() });
+  if (error) return $("authMessage").textContent = error.message;
+  $("authMessage").textContent = "Recovery email sent. Check your inbox and spam folder.";
+};
+
+$("resetPasswordForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!supabase) return;
+  const password = $("newPassword").value;
+  const confirm = $("confirmPassword").value;
+  if (password !== confirm) {
+    $("resetPasswordMessage").textContent = "The passwords do not match.";
+    return;
+  }
+  $("resetPasswordMessage").textContent = "Updating password…";
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return $("resetPasswordMessage").textContent = error.message;
+  $("resetPasswordMessage").textContent = "Password updated. You can now log in.";
+  setTimeout(() => {
+    hideModal(resetPasswordModal);
+    setAuthMode("login");
+    showModal(authModal);
+  }, 900);
+});
 
 $("authForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -78,7 +117,13 @@ async function refreshAuthButton(){
   const { data: { session } } = await supabase.auth.getSession();
   $("authButton").textContent = session ? "Editor dashboard" : "Editor login";
 }
-supabase?.auth.onAuthStateChange(() => refreshAuthButton());
+supabase?.auth.onAuthStateChange((event) => {
+  refreshAuthButton();
+  if (event === "PASSWORD_RECOVERY") {
+    showModal(resetPasswordModal);
+    $("resetPasswordMessage").textContent = "";
+  }
+});
 
 async function loadPublicContent(){
   if (!configured) {
@@ -254,3 +299,10 @@ $("menuButton").onclick = () => {
   nav.style.background = "#f5f5f2";
   nav.style.flexDirection = "column";
 };
+
+
+// If Supabase redirects back here after a password-recovery email, the client
+// emits PASSWORD_RECOVERY and the reset form above is shown automatically.
+if (configured) {
+  supabase.auth.getSession().catch((error) => console.error("Jbad auth session error:", error));
+}
