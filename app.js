@@ -1,3 +1,4 @@
+```javascript
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   SUPABASE_URL,
@@ -16,7 +17,6 @@ const supabase = configured
   : null;
 
 const $ = (id) => document.getElementById(id);
-
 const authModal = $("authModal");
 const dashboardModal = $("dashboardModal");
 const resetPasswordModal = $("resetPasswordModal");
@@ -28,12 +28,21 @@ let authMode = "signup";
    ========================================================= */
 
 window.addEventListener("error", (event) => {
-  console.error("Jbad Editing error:", event.error || event.message);
+  console.error(
+    "Jbad Editing error:",
+    event.error || event.message
+  );
 });
 
-window.addEventListener("unhandledrejection", (event) => {
-  console.error("Jbad Editing promise error:", event.reason);
-});
+window.addEventListener(
+  "unhandledrejection",
+  (event) => {
+    console.error(
+      "Jbad Editing promise error:",
+      event.reason
+    );
+  }
+);
 
 /* =========================================================
    HELPERS
@@ -52,14 +61,23 @@ function hideModal(element) {
 }
 
 function siteUrl() {
-  return window.location.origin + window.location.pathname;
+  return (
+    window.location.origin +
+    window.location.pathname
+  );
 }
 
 function safeUrl(value) {
   try {
-    const url = new URL(value, window.location.href);
+    const url = new URL(
+      value,
+      window.location.href
+    );
 
-    if (url.protocol === "http:" || url.protocol === "https:") {
+    if (
+      url.protocol === "http:" ||
+      url.protocol === "https:"
+    ) {
       return url.href;
     }
 
@@ -70,17 +88,20 @@ function safeUrl(value) {
 }
 
 function escapeHtml(value = "") {
-  return String(value).replace(/[&<>"']/g, (character) => {
-    const entities = {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#039;"
-    };
+  return String(value).replace(
+    /[&<>"']/g,
+    (character) => {
+      const entities = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      };
 
-    return entities[character];
-  });
+      return entities[character];
+    }
+  );
 }
 
 function escapeAttr(value = "") {
@@ -149,17 +170,24 @@ function setAuthMode(mode) {
   authMode = mode;
 
   if ($("profileFields")) {
-    $("profileFields").classList.toggle("hidden", mode === "login");
+    $("profileFields").classList.toggle(
+      "hidden",
+      mode === "login"
+    );
   }
 
   if ($("authSubmit")) {
     $("authSubmit").textContent =
-      mode === "login" ? "Log in" : "Create account";
+      mode === "login"
+        ? "Log in"
+        : "Create account";
   }
 
   if ($("authTitle")) {
     $("authTitle").textContent =
-      mode === "login" ? "Editor login" : "Join Jbad Editing";
+      mode === "login"
+        ? "Editor login"
+        : "Join Jbad Editing";
   }
 
   if ($("authHint")) {
@@ -177,7 +205,10 @@ function setAuthMode(mode) {
   }
 
   if ($("forgotPassword")) {
-    $("forgotPassword").classList.toggle("hidden", mode !== "login");
+    $("forgotPassword").classList.toggle(
+      "hidden",
+      mode !== "login"
+    );
   }
 
   if ($("authMessage")) {
@@ -187,7 +218,11 @@ function setAuthMode(mode) {
 
 if ($("toggleAuthMode")) {
   $("toggleAuthMode").onclick = () => {
-    setAuthMode(authMode === "login" ? "signup" : "login");
+    setAuthMode(
+      authMode === "login"
+        ? "signup"
+        : "login"
+    );
   };
 }
 
@@ -201,7 +236,8 @@ if ($("forgotPassword")) {
       return;
     }
 
-    const email = $("email").value.trim();
+    const email =
+      $("email").value.trim();
 
     if (!email) {
       $("authMessage").textContent =
@@ -210,15 +246,20 @@ if ($("forgotPassword")) {
       return;
     }
 
-    $("authMessage").textContent = "Sending recovery email...";
+    $("authMessage").textContent =
+      "Sending recovery email...";
 
     const { error } =
-      await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: siteUrl()
-      });
+      await supabase.auth.resetPasswordForEmail(
+        email,
+        {
+          redirectTo: siteUrl()
+        }
+      );
 
     if (error) {
-      $("authMessage").textContent = error.message;
+      $("authMessage").textContent =
+        error.message;
       return;
     }
 
@@ -228,43 +269,51 @@ if ($("forgotPassword")) {
 }
 
 if ($("resetPasswordForm")) {
-  $("resetPasswordForm").addEventListener("submit", async (event) => {
-    event.preventDefault();
+  $("resetPasswordForm").addEventListener(
+    "submit",
+    async (event) => {
+      event.preventDefault();
 
-    if (!supabase) {
-      return;
-    }
+      if (!supabase) {
+        return;
+      }
 
-    const password = $("newPassword").value;
-    const confirmPassword = $("confirmPassword").value;
+      const password =
+        $("newPassword").value;
 
-    if (password !== confirmPassword) {
+      const confirmPassword =
+        $("confirmPassword").value;
+
+      if (password !== confirmPassword) {
+        $("resetPasswordMessage").textContent =
+          "The passwords do not match.";
+        return;
+      }
+
       $("resetPasswordMessage").textContent =
-        "The passwords do not match.";
-      return;
+        "Updating password...";
+
+      const { error } =
+        await supabase.auth.updateUser({
+          password
+        });
+
+      if (error) {
+        $("resetPasswordMessage").textContent =
+          error.message;
+        return;
+      }
+
+      $("resetPasswordMessage").textContent =
+        "Password updated successfully.";
+
+      setTimeout(() => {
+        hideModal(resetPasswordModal);
+        setAuthMode("login");
+        showModal(authModal);
+      }, 900);
     }
-
-    $("resetPasswordMessage").textContent =
-      "Updating password...";
-
-    const { error } = await supabase.auth.updateUser({
-      password
-    });
-
-    if (error) {
-      $("resetPasswordMessage").textContent = error.message;
-      return;
-    }
-
-    $("resetPasswordMessage").textContent =
-      "Password updated successfully.";
-
-    setTimeout(() => {
-      hideModal(resetPasswordModal);
-      setAuthMode("login");
-      showModal(authModal);
-    }, 900);
-  });
+  );
 }
 
 /* =========================================================
@@ -272,78 +321,93 @@ if ($("resetPasswordForm")) {
    ========================================================= */
 
 if ($("authForm")) {
-  $("authForm").addEventListener("submit", async (event) => {
-    event.preventDefault();
+  $("authForm").addEventListener(
+    "submit",
+    async (event) => {
+      event.preventDefault();
 
-    if (!supabase) {
-      $("authMessage").textContent =
-        "Supabase is not configured.";
-      return;
-    }
-
-    const email = $("email").value.trim();
-    const password = $("password").value;
-
-    $("authMessage").textContent = "Working...";
-
-    if (authMode === "login") {
-      const { error } =
-        await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-
-      if (error) {
-        $("authMessage").textContent = error.message;
+      if (!supabase) {
+        $("authMessage").textContent =
+          "Supabase is not configured.";
         return;
       }
 
-      hideModal(authModal);
+      const email =
+        $("email").value.trim();
 
-      await refreshAuthButton();
-      await openDashboard();
+      const password =
+        $("password").value;
 
-      return;
-    }
-
-    const displayName =
-      $("displayName").value.trim() || "Jbad Editor";
-
-    const speciality =
-      $("speciality").value.trim() ||
-      "Video & Photo Editor";
-
-    const contactEmail =
-      $("contactEmail")?.value.trim() || email;
-
-    const { data, error } =
-      await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            display_name: displayName,
-            speciality,
-            contact_email: contactEmail
-          }
-        }
-      });
-
-    if (error) {
-      $("authMessage").textContent = error.message;
-      return;
-    }
-
-    if (data.session) {
-      hideModal(authModal);
-
-      await refreshAuthButton();
-      await openDashboard();
-    } else {
       $("authMessage").textContent =
-        "Account created. Check your email to confirm your account, then log in.";
+        "Working...";
+
+      if (authMode === "login") {
+        const { error } =
+          await supabase.auth.signInWithPassword(
+            {
+              email,
+              password
+            }
+          );
+
+        if (error) {
+          $("authMessage").textContent =
+            error.message;
+          return;
+        }
+
+        hideModal(authModal);
+
+        await refreshAuthButton();
+        await openDashboard();
+
+        return;
+      }
+
+      const displayName =
+        $("displayName").value.trim() ||
+        "Jbad Editor";
+
+      const speciality =
+        $("speciality").value.trim() ||
+        "Video & Photo Editor";
+
+      const contactEmail =
+        $("contactEmail")?.value.trim() ||
+        email;
+
+      const { data, error } =
+        await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              display_name:
+                displayName,
+              speciality,
+              contact_email:
+                contactEmail
+            }
+          }
+        });
+
+      if (error) {
+        $("authMessage").textContent =
+          error.message;
+        return;
+      }
+
+      if (data.session) {
+        hideModal(authModal);
+
+        await refreshAuthButton();
+        await openDashboard();
+      } else {
+        $("authMessage").textContent =
+          "Account created. Check your email to confirm your account, then log in.";
+      }
     }
-  });
+  );
 }
 
 /* =========================================================
@@ -351,7 +415,10 @@ if ($("authForm")) {
    ========================================================= */
 
 async function refreshAuthButton() {
-  if (!supabase || !$("authButton")) {
+  if (
+    !supabase ||
+    !$("authButton")
+  ) {
     return;
   }
 
@@ -360,21 +427,29 @@ async function refreshAuthButton() {
   } = await supabase.auth.getSession();
 
   $("authButton").textContent =
-    session ? "Editor dashboard" : "Editor login";
+    session
+      ? "Editor dashboard"
+      : "Editor login";
 }
 
 if (supabase) {
-  supabase.auth.onAuthStateChange((event) => {
-    refreshAuthButton();
+  supabase.auth.onAuthStateChange(
+    (event) => {
+      refreshAuthButton();
 
-    if (event === "PASSWORD_RECOVERY") {
-      showModal(resetPasswordModal);
+      if (
+        event ===
+        "PASSWORD_RECOVERY"
+      ) {
+        showModal(resetPasswordModal);
 
-      if ($("resetPasswordMessage")) {
-        $("resetPasswordMessage").textContent = "";
+        if ($("resetPasswordMessage")) {
+          $("resetPasswordMessage").textContent =
+            "";
+        }
       }
     }
-  });
+  );
 }
 
 /* =========================================================
@@ -413,19 +488,27 @@ async function loadPublicContent() {
     });
 
   if (profileError) {
-    console.error("Profile loading error:", profileError);
+    console.error(
+      "Profile loading error:",
+      profileError
+    );
 
     if ($("editorsGrid")) {
       $("editorsGrid").innerHTML = `
         <div class="empty-state">
-          ${escapeHtml(profileError.message)}
+          ${escapeHtml(
+            profileError.message
+          )}
         </div>
       `;
     }
   } else if ($("editorsGrid")) {
     $("editorsGrid").innerHTML =
-      profiles && profiles.length
-        ? profiles.map(editorCard).join("")
+      profiles &&
+      profiles.length
+        ? profiles
+            .map(editorCard)
+            .join("")
         : `
           <div class="empty-state">
             No editors yet. Be the first to join.
@@ -438,25 +521,35 @@ async function loadPublicContent() {
     error: postError
   } = await supabase
     .from("editor_posts")
-    .select("*, profiles(display_name, speciality)")
+    .select(
+      "*, profiles(display_name, speciality)"
+    )
     .order("created_at", {
       ascending: false
     });
 
   if (postError) {
-    console.error("Post loading error:", postError);
+    console.error(
+      "Post loading error:",
+      postError
+    );
 
     if ($("featuredGrid")) {
       $("featuredGrid").innerHTML = `
         <div class="empty-state">
-          ${escapeHtml(postError.message)}
+          ${escapeHtml(
+            postError.message
+          )}
         </div>
       `;
     }
   } else if ($("featuredGrid")) {
     $("featuredGrid").innerHTML =
-      posts && posts.length
-        ? posts.map(workCard).join("")
+      posts &&
+      posts.length
+        ? posts
+            .map(workCard)
+            .join("")
         : `
           <div class="empty-state">
             No showcase posts yet.
@@ -466,21 +559,26 @@ async function loadPublicContent() {
 }
 
 function editorCard(profile) {
-  const initials = escapeHtml(
-    (profile.display_name || "J")
-      .slice(0, 1)
-      .toUpperCase()
-  );
+  const initials =
+    escapeHtml(
+      (
+        profile.display_name ||
+        "J"
+      )
+        .slice(0, 1)
+        .toUpperCase()
+    );
 
   return `
     <article class="editor-card">
-
       <div class="editor-avatar">
         ${
           profile.avatar_url
             ? `
               <img
-                src="${safeUrl(profile.avatar_url)}"
+                src="${safeUrl(
+                  profile.avatar_url
+                )}"
                 alt=""
                 style="width:100%;height:100%;object-fit:cover"
               >
@@ -493,13 +591,15 @@ function editorCard(profile) {
 
         <h3>
           ${escapeHtml(
-            profile.display_name || "Jbad Editor"
+            profile.display_name ||
+              "Jbad Editor"
           )}
         </h3>
 
         <p>
           ${escapeHtml(
-            profile.speciality || "Editor"
+            profile.speciality ||
+              "Editor"
           )}
         </p>
 
@@ -507,7 +607,9 @@ function editorCard(profile) {
           profile.bio
             ? `
               <p class="small">
-                ${escapeHtml(profile.bio)}
+                ${escapeHtml(
+                  profile.bio
+                )}
               </p>
             `
             : ""
@@ -520,7 +622,9 @@ function editorCard(profile) {
                 class="small"
                 target="_blank"
                 rel="noopener"
-                href="${safeUrl(profile.website_url)}"
+                href="${safeUrl(
+                  profile.website_url
+                )}"
               >
                 Portfolio ↗
               </a>
@@ -529,28 +633,34 @@ function editorCard(profile) {
         }
 
       </div>
-
     </article>
   `;
 }
 
 function workCard(post) {
   const editor =
-    post.profiles?.display_name || "Jbad Editor";
+    post.profiles?.display_name ||
+    "Jbad Editor";
 
   const media =
     post.media_type === "video"
       ? `
         <video
-          src="${safeUrl(post.media_url)}"
+          src="${safeUrl(
+            post.media_url
+          )}"
           controls
           preload="metadata"
         ></video>
       `
       : `
         <img
-          src="${safeUrl(post.media_url)}"
-          alt="${escapeHtml(post.title)}"
+          src="${safeUrl(
+            post.media_url
+          )}"
+          alt="${escapeHtml(
+            post.title
+          )}"
           loading="lazy"
         >
       `;
@@ -565,7 +675,9 @@ function workCard(post) {
       <div class="work-info">
 
         <h3>
-          ${escapeHtml(post.title)}
+          ${escapeHtml(
+            post.title
+          )}
         </h3>
 
         <p>
@@ -576,7 +688,9 @@ function workCard(post) {
           post.description
             ? `
               <p class="small">
-                ${escapeHtml(post.description)}
+                ${escapeHtml(
+                  post.description
+                )}
               </p>
             `
             : ""
@@ -599,7 +713,8 @@ async function openDashboard() {
 
   const {
     data: { session }
-  } = await supabase.auth.getSession();
+  } =
+    await supabase.auth.getSession();
 
   if (!session) {
     setAuthMode("login");
@@ -617,7 +732,10 @@ async function openDashboard() {
     .single();
 
   if (profileError) {
-    console.error("Profile error:", profileError);
+    console.error(
+      "Profile error:",
+      profileError
+    );
   }
 
   const {
@@ -626,31 +744,43 @@ async function openDashboard() {
   } = await supabase
     .from("editor_posts")
     .select("*")
-    .eq("editor_id", session.user.id)
+    .eq(
+      "editor_id",
+      session.user.id
+    )
     .order("created_at", {
       ascending: false
     });
 
   if (postsError) {
-    console.error("Posts error:", postsError);
+    console.error(
+      "Posts error:",
+      postsError
+    );
   }
 
-  const balance = Number(
-    profile?.balance ??
-    profile?.account_balance ??
-    0
-  );
+  const balance =
+    Number(
+      profile?.balance ??
+      profile?.account_balance ??
+      0
+    );
 
   $("dashboardContent").innerHTML = `
 
-    <form id="profileForm" class="dashboard-grid">
+    <form
+      id="profileForm"
+      class="dashboard-grid"
+    >
 
       <label>
         Display name
-
         <input
           id="dName"
-          value="${escapeAttr(profile?.display_name || "")}"
+          value="${escapeAttr(
+            profile?.display_name ||
+              ""
+          )}"
           maxlength="80"
           required
         >
@@ -661,18 +791,22 @@ async function openDashboard() {
 
         <input
           id="dSpeciality"
-          value="${escapeAttr(profile?.speciality || "")}"
+          value="${escapeAttr(
+            profile?.speciality ||
+              ""
+          )}"
           maxlength="120"
         >
       </label>
 
       <label class="full-row">
         Bio
-
         <textarea
           id="dBio"
           maxlength="500"
-        >${escapeHtml(profile?.bio || "")}</textarea>
+        >${escapeHtml(
+          profile?.bio || ""
+        )}</textarea>
       </label>
 
       <label>
@@ -681,7 +815,10 @@ async function openDashboard() {
         <input
           id="dWebsite"
           type="url"
-          value="${escapeAttr(profile?.website_url || "")}"
+          value="${escapeAttr(
+            profile?.website_url ||
+              ""
+          )}"
           placeholder="https://..."
         >
       </label>
@@ -692,7 +829,10 @@ async function openDashboard() {
         <input
           id="dAvatar"
           type="url"
-          value="${escapeAttr(profile?.avatar_url || "")}"
+          value="${escapeAttr(
+            profile?.avatar_url ||
+              ""
+          )}"
           placeholder="https://..."
         >
       </label>
@@ -724,6 +864,7 @@ async function openDashboard() {
         border-radius:12px;
       "
     >
+
       <p class="eyebrow">
         ACCOUNT BALANCE
       </p>
@@ -740,6 +881,55 @@ async function openDashboard() {
       <p class="muted">
         Available Jbad Editing account funds.
       </p>
+
+      <div
+        style="
+          margin-top:20px;
+          padding-top:20px;
+          border-top:1px solid #eee;
+        "
+      >
+
+        <h4
+          style="
+            margin:0 0 8px;
+          "
+        >
+          Withdraw funds
+        </h4>
+
+        <p class="muted">
+          Transfer available funds to your connected Stripe account.
+        </p>
+
+        <label>
+          Withdrawal amount
+          <input
+            id="withdrawAmount"
+            type="number"
+            min="1"
+            max="${balance.toFixed(2)}"
+            step="0.01"
+            placeholder="5.00"
+          >
+        </label>
+
+        <button
+          id="withdrawButton"
+          class="button primary"
+          type="button"
+          style="margin-top:12px;"
+        >
+          Withdraw
+        </button>
+
+        <p
+          id="withdrawMessage"
+          class="form-message"
+        ></p>
+
+      </div>
+
     </div>
 
     <div
@@ -752,6 +942,7 @@ async function openDashboard() {
         border-radius:12px;
       "
     >
+
       <p class="eyebrow">
         ACCOUNT FUNDS
       </p>
@@ -776,7 +967,10 @@ async function openDashboard() {
         >
       </label>
 
-      <p class="small" style="margin-top:10px;">
+      <p
+        class="small"
+        style="margin-top:10px;"
+      >
         A 3.5% Jbad Editing service fee will be added before you pay.
       </p>
 
@@ -792,6 +986,7 @@ async function openDashboard() {
         id="paymentMessage"
         class="form-message"
       ></p>
+
     </div>
 
     <div
@@ -803,15 +998,21 @@ async function openDashboard() {
         background:#fff;
       "
     >
+
       <p class="eyebrow">
         PAYMENTS
       </p>
 
-      <h3 style="margin:0 0 8px;">
+      <h3
+        style="margin:0 0 8px;"
+      >
         Stripe payments
       </h3>
 
-      <p id="stripeStatus" class="muted">
+      <p
+        id="stripeStatus"
+        class="muted"
+      >
         Checking Stripe connection...
       </p>
 
@@ -827,6 +1028,7 @@ async function openDashboard() {
         id="stripeMessage"
         class="form-message"
       ></p>
+
     </div>
 
     <hr
@@ -841,7 +1043,10 @@ async function openDashboard() {
       Publish showcase work
     </h3>
 
-    <form id="postForm" class="dashboard-grid">
+    <form
+      id="postForm"
+      class="dashboard-grid"
+    >
 
       <label>
         Title
@@ -865,8 +1070,13 @@ async function openDashboard() {
             border-radius:8px;
           "
         >
-          <option value="image">Image</option>
-          <option value="video">Video</option>
+          <option value="image">
+            Image
+          </option>
+
+          <option value="video">
+            Video
+          </option>
         </select>
       </label>
 
@@ -908,7 +1118,10 @@ async function openDashboard() {
 
     </form>
 
-    <p id="postMessage" class="form-message"></p>
+    <p
+      id="postMessage"
+      class="form-message"
+    ></p>
 
     <h3>
       Your posts
@@ -924,19 +1137,29 @@ async function openDashboard() {
                   <div class="post-row">
 
                     <div>
+
                       <b>
-                        ${escapeHtml(post.title)}
+                        ${escapeHtml(
+                          post.title
+                        )}
                       </b>
 
                       <div class="small">
-                        ${escapeHtml(post.media_type)}
+                        ${escapeHtml(
+                          post.media_type
+                        )}
                       </div>
+
                     </div>
 
                     <button
                       class="button danger delete-post"
-                      data-id="${escapeAttr(post.id)}"
-                      data-url="${escapeAttr(post.media_url)}"
+                      data-id="${escapeAttr(
+                        post.id
+                      )}"
+                      data-url="${escapeAttr(
+                        post.media_url
+                      )}"
                     >
                       Delete
                     </button>
@@ -961,62 +1184,235 @@ async function openDashboard() {
      SAVE PROFILE
      ======================================================= */
 
-  $("profileForm").onsubmit = async (event) => {
-    event.preventDefault();
+  $("profileForm").onsubmit =
+    async (event) => {
+      event.preventDefault();
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        display_name: $("dName").value.trim(),
-        speciality: $("dSpeciality").value.trim(),
-        bio: $("dBio").value.trim(),
-        website_url:
-          $("dWebsite").value.trim() || null,
-        avatar_url:
-          $("dAvatar").value.trim() || null,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", session.user.id);
+      const { error } =
+        await supabase
+          .from("profiles")
+          .update({
+            display_name:
+              $("dName").value.trim(),
 
-    if (error) {
-      alert(error.message);
-      return;
-    }
+            speciality:
+              $("dSpeciality")
+                .value.trim(),
 
-    alert("Profile saved.");
-    await loadPublicContent();
-  };
+            bio:
+              $("dBio").value.trim(),
+
+            website_url:
+              $("dWebsite")
+                .value.trim() ||
+              null,
+
+            avatar_url:
+              $("dAvatar")
+                .value.trim() ||
+              null,
+
+            updated_at:
+              new Date().toISOString()
+          })
+          .eq(
+            "id",
+            session.user.id
+          );
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      alert(
+        "Profile saved."
+      );
+
+      await loadPublicContent();
+    };
 
   /* =======================================================
      LOG OUT
      ======================================================= */
 
-  $("logoutButton").onclick = async () => {
-    await supabase.auth.signOut();
+  $("logoutButton").onclick =
+    async () => {
+      await supabase.auth.signOut();
 
-    hideModal(dashboardModal);
-    await refreshAuthButton();
-  };
+      hideModal(
+        dashboardModal
+      );
+
+      await refreshAuthButton();
+    };
+
+  /* =======================================================
+     WITHDRAW
+     ======================================================= */
+
+  const withdrawButton =
+    $("withdrawButton");
+
+  const withdrawAmount =
+    $("withdrawAmount");
+
+  const withdrawMessage =
+    $("withdrawMessage");
+
+  if (withdrawButton) {
+    withdrawButton.onclick =
+      async () => {
+        const pounds =
+          Number(
+            withdrawAmount.value
+          );
+
+        if (
+          !Number.isFinite(
+            pounds
+          ) ||
+          pounds <= 0
+        ) {
+          withdrawMessage.textContent =
+            "Enter a valid withdrawal amount.";
+
+          return;
+        }
+
+        if (
+          pounds < 1
+        ) {
+          withdrawMessage.textContent =
+            "Minimum withdrawal is £1.00.";
+
+          return;
+        }
+
+        if (
+          pounds > balance
+        ) {
+          withdrawMessage.textContent =
+            "You cannot withdraw more than your available balance.";
+
+          return;
+        }
+
+        const amount =
+          Math.round(
+            pounds * 100
+          );
+
+        withdrawButton.disabled =
+          true;
+
+        withdrawButton.textContent =
+          "Processing...";
+
+        withdrawMessage.textContent =
+          "Processing your withdrawal...";
+
+        try {
+          const {
+            data,
+            error
+          } =
+            await supabase.functions.invoke(
+              "stripe-withdraw",
+              {
+                body: {
+                  amount
+                }
+              }
+            );
+
+          console.log(
+            "stripe-withdraw response:",
+            data,
+            error
+          );
+
+          if (error) {
+            throw new Error(
+              error.message ||
+              "Withdrawal request failed."
+            );
+          }
+
+          if (
+            !data ||
+            data.success !== true
+          ) {
+            throw new Error(
+              data?.error ||
+              "Withdrawal failed."
+            );
+          }
+
+          withdrawMessage.textContent =
+            `Withdrawal successful. £${pounds.toFixed(
+              2
+            )} has been transferred to your Stripe account.`;
+
+          withdrawAmount.value =
+            "";
+
+          /*
+           * Reload the dashboard so the displayed
+           * balance comes directly from Supabase.
+           */
+          await openDashboard();
+
+        } catch (error) {
+          console.error(
+            "Withdrawal error:",
+            error
+          );
+
+          withdrawMessage.textContent =
+            error.message ||
+            "Unable to process withdrawal.";
+
+          withdrawButton.disabled =
+            false;
+
+          withdrawButton.textContent =
+            "Withdraw";
+        }
+      };
+  }
 
   /* =======================================================
      STRIPE CONNECT
      ======================================================= */
 
-  const stripeStatus = $("stripeStatus");
-  const stripeButton = $("stripeButton");
-  const stripeMessage = $("stripeMessage");
+  const stripeStatus =
+    $("stripeStatus");
+
+  const stripeButton =
+    $("stripeButton");
+
+  const stripeMessage =
+    $("stripeMessage");
 
   async function checkStripeConnection() {
     stripeStatus.textContent =
       "Checking Stripe connection...";
 
-    stripeMessage.textContent = "";
+    stripeMessage.textContent =
+      "";
 
-    stripeButton.disabled = true;
-    stripeButton.textContent = "Checking Stripe...";
+    stripeButton.disabled =
+      true;
+
+    stripeButton.textContent =
+      "Checking Stripe...";
 
     try {
-      const { data, error } =
+      const {
+        data,
+        error
+      } =
         await supabase.functions.invoke(
           "stripe-connect",
           {
@@ -1024,10 +1420,16 @@ async function openDashboard() {
           }
         );
 
-      console.log("Stripe Connect response:", data);
+      console.log(
+        "Stripe Connect response:",
+        data
+      );
 
       if (error) {
-        console.error("Stripe Connect error:", error);
+        console.error(
+          "Stripe Connect error:",
+          error
+        );
 
         throw new Error(
           error.message ||
@@ -1044,8 +1446,10 @@ async function openDashboard() {
       if (
         data.connected === true ||
         (
-          data.chargesEnabled === true &&
-          data.payoutsEnabled === true
+          data.chargesEnabled ===
+            true &&
+          data.payoutsEnabled ===
+            true
         )
       ) {
         stripeStatus.textContent =
@@ -1054,13 +1458,15 @@ async function openDashboard() {
         stripeButton.textContent =
           "Stripe connected";
 
-        stripeButton.disabled = true;
+        stripeButton.disabled =
+          true;
 
         return;
       }
 
       if (
-        typeof data.url === "string" &&
+        typeof data.url ===
+          "string" &&
         data.url.length > 0
       ) {
         stripeStatus.textContent =
@@ -1069,11 +1475,14 @@ async function openDashboard() {
         stripeButton.textContent =
           "Finish Stripe setup";
 
-        stripeButton.disabled = false;
+        stripeButton.disabled =
+          false;
 
-        stripeButton.onclick = () => {
-          window.location.href = data.url;
-        };
+        stripeButton.onclick =
+          () => {
+            window.location.href =
+              data.url;
+          };
 
         return;
       }
@@ -1085,7 +1494,8 @@ async function openDashboard() {
       stripeButton.textContent =
         "Check Stripe again";
 
-      stripeButton.disabled = false;
+      stripeButton.disabled =
+        false;
 
       stripeButton.onclick =
         checkStripeConnection;
@@ -1106,14 +1516,16 @@ async function openDashboard() {
       stripeButton.textContent =
         "Check Stripe again";
 
-      stripeButton.disabled = false;
+      stripeButton.disabled =
+        false;
 
       stripeButton.onclick =
         checkStripeConnection;
     }
   }
 
-  stripeButton.onclick = checkStripeConnection;
+  stripeButton.onclick =
+    checkStripeConnection;
 
   checkStripeConnection();
 
@@ -1121,144 +1533,208 @@ async function openDashboard() {
      PUBLISH SHOWCASE WORK
      ======================================================= */
 
-  $("postForm").onsubmit = async (event) => {
-    event.preventDefault();
+  $("postForm").onsubmit =
+    async (event) => {
+      event.preventDefault();
 
-    const file = $("postFile").files[0];
-    const message = $("postMessage");
+      const file =
+        $("postFile").files[0];
 
-    if (!file) {
-      message.textContent = "Choose a file first.";
-      return;
-    }
+      const message =
+        $("postMessage");
 
-    if (file.size > 50 * 1024 * 1024) {
-      message.textContent =
-        "That file is over the 50 MB limit.";
-      return;
-    }
+      if (!file) {
+        message.textContent =
+          "Choose a file first.";
 
-    message.textContent = "Uploading...";
+        return;
+      }
 
-    const type = $("postType").value;
+      if (
+        file.size >
+        50 * 1024 * 1024
+      ) {
+        message.textContent =
+          "That file is over the 50 MB limit.";
 
-    if (
-      type === "image" &&
-      !file.type.startsWith("image/")
-    ) {
-      message.textContent =
-        "Choose an image file.";
-      return;
-    }
-
-    if (
-      type === "video" &&
-      !file.type.startsWith("video/")
-    ) {
-      message.textContent =
-        "Choose a video file.";
-      return;
-    }
-
-    const safeName = file.name
-      .toLowerCase()
-      .replace(/[^a-z0-9._-]+/g, "-");
-
-    const path =
-      `${session.user.id}/${crypto.randomUUID()}-${safeName}`;
-
-    const { error: uploadError } =
-      await supabase.storage
-        .from("portfolio")
-        .upload(path, file, {
-          upsert: false,
-          contentType: file.type
-        });
-
-    if (uploadError) {
-      message.textContent =
-        uploadError.message;
-      return;
-    }
-
-    const { data: publicData } =
-      supabase.storage
-        .from("portfolio")
-        .getPublicUrl(path);
-
-    const { error: insertError } =
-      await supabase
-        .from("editor_posts")
-        .insert({
-          editor_id: session.user.id,
-          title: $("postTitle").value.trim(),
-          description:
-            $("postDescription").value.trim(),
-          media_url: publicData.publicUrl,
-          media_type: type
-        });
-
-    if (insertError) {
-      await supabase.storage
-        .from("portfolio")
-        .remove([path]);
+        return;
+      }
 
       message.textContent =
-        insertError.message;
+        "Uploading...";
 
-      return;
-    }
+      const type =
+        $("postType").value;
 
-    message.textContent = "Published!";
+      if (
+        type === "image" &&
+        !file.type.startsWith(
+          "image/"
+        )
+      ) {
+        message.textContent =
+          "Choose an image file.";
 
-    await openDashboard();
-    await loadPublicContent();
-  };
+        return;
+      }
+
+      if (
+        type === "video" &&
+        !file.type.startsWith(
+          "video/"
+        )
+      ) {
+        message.textContent =
+          "Choose a video file.";
+
+        return;
+      }
+
+      const safeName =
+        file.name
+          .toLowerCase()
+          .replace(
+            /[^a-z0-9._-]+/g,
+            "-"
+          );
+
+      const path =
+        `${session.user.id}/${crypto.randomUUID()}-${safeName}`;
+
+      const {
+        error: uploadError
+      } =
+        await supabase.storage
+          .from("portfolio")
+          .upload(
+            path,
+            file,
+            {
+              upsert: false,
+              contentType:
+                file.type
+            }
+          );
+
+      if (uploadError) {
+        message.textContent =
+          uploadError.message;
+
+        return;
+      }
+
+      const {
+        data: publicData
+      } =
+        supabase.storage
+          .from("portfolio")
+          .getPublicUrl(path);
+
+      const {
+        error: insertError
+      } =
+        await supabase
+          .from("editor_posts")
+          .insert({
+            editor_id:
+              session.user.id,
+
+            title:
+              $("postTitle")
+                .value.trim(),
+
+            description:
+              $("postDescription")
+                .value.trim(),
+
+            media_url:
+              publicData.publicUrl,
+
+            media_type:
+              type
+          });
+
+      if (insertError) {
+        await supabase.storage
+          .from("portfolio")
+          .remove([path]);
+
+        message.textContent =
+          insertError.message;
+
+        return;
+      }
+
+      message.textContent =
+        "Published!";
+
+      await openDashboard();
+      await loadPublicContent();
+    };
 
   /* =======================================================
      DELETE POSTS
      ======================================================= */
 
   document
-    .querySelectorAll(".delete-post")
+    .querySelectorAll(
+      ".delete-post"
+    )
     .forEach((button) => {
-      button.onclick = async () => {
-        if (!confirm("Delete this post?")) {
-          return;
-        }
+      button.onclick =
+        async () => {
+          if (
+            !confirm(
+              "Delete this post?"
+            )
+          ) {
+            return;
+          }
 
-        const url = button.dataset.url;
+          const url =
+            button.dataset.url;
 
-        const marker =
-          "/storage/v1/object/public/portfolio/";
+          const marker =
+            "/storage/v1/object/public/portfolio/";
 
-        const path =
-          url && url.includes(marker)
-            ? decodeURIComponent(
-                url.split(marker)[1]
-              )
-            : null;
+          const path =
+            url &&
+            url.includes(marker)
+              ? decodeURIComponent(
+                  url.split(
+                    marker
+                  )[1]
+                )
+              : null;
 
-        if (path) {
-          await supabase.storage
-            .from("portfolio")
-            .remove([path]);
-        }
+          if (path) {
+            await supabase.storage
+              .from("portfolio")
+              .remove([path]);
+          }
 
-        const { error } =
-          await supabase
-            .from("editor_posts")
-            .delete()
-            .eq("id", button.dataset.id);
+          const {
+            error
+          } =
+            await supabase
+              .from("editor_posts")
+              .delete()
+              .eq(
+                "id",
+                button.dataset.id
+              );
 
-        if (error) {
-          alert(error.message);
-          return;
-        }
+          if (error) {
+            alert(
+              error.message
+            );
 
-        await openDashboard();
-        await loadPublicContent();
-      };
+            return;
+          }
+
+          await openDashboard();
+          await loadPublicContent();
+        };
     });
 }
 
@@ -1270,22 +1746,36 @@ async function openDashboard() {
    ========================================================= */
 
 async function startSecurePayment() {
-  console.log("Secure Payment button clicked");
+  console.log(
+    "Secure Payment button clicked"
+  );
 
   if (!supabase) {
-    alert("Supabase is not connected.");
-    console.error("Supabase client is not configured.");
+    alert(
+      "Supabase is not connected."
+    );
+
+    console.error(
+      "Supabase client is not configured."
+    );
+
     return;
   }
 
   const amountInput =
-    document.getElementById("fundAmount");
+    document.getElementById(
+      "fundAmount"
+    );
 
   const message =
-    document.getElementById("paymentMessage");
+    document.getElementById(
+      "paymentMessage"
+    );
 
   const button =
-    document.getElementById("securePaymentButton");
+    document.getElementById(
+      "securePaymentButton"
+    );
 
   if (!amountInput) {
     console.error(
@@ -1300,7 +1790,9 @@ async function startSecurePayment() {
   }
 
   const pounds =
-    Number(amountInput.value);
+    Number(
+      amountInput.value
+    );
 
   console.log(
     "Payment amount entered:",
@@ -1308,7 +1800,9 @@ async function startSecurePayment() {
   );
 
   if (
-    !Number.isFinite(pounds) ||
+    !Number.isFinite(
+      pounds
+    ) ||
     pounds <= 0
   ) {
     if (message) {
@@ -1329,10 +1823,14 @@ async function startSecurePayment() {
   }
 
   const amount =
-    Math.round(pounds * 100);
+    Math.round(
+      pounds * 100
+    );
 
   const jbadFee =
-    Math.round(amount * 0.035);
+    Math.round(
+      amount * 0.035
+    );
 
   const total =
     amount + jbadFee;
@@ -1356,15 +1854,23 @@ async function startSecurePayment() {
     message.textContent =
       `Account funds: £${(
         amount / 100
-      ).toFixed(2)} + 3.5% fee (£${(
+      ).toFixed(
+        2
+      )} + 3.5% fee (£${(
         jbadFee / 100
-      ).toFixed(2)}) = £${(
+      ).toFixed(
+        2
+      )}) = £${(
         total / 100
-      ).toFixed(2)}. Opening Stripe...`;
+      ).toFixed(
+        2
+      )}. Opening Stripe...`;
   }
 
   if (button) {
-    button.disabled = true;
+    button.disabled =
+      true;
+
     button.textContent =
       "Opening Stripe...";
   }
@@ -1379,7 +1885,7 @@ async function startSecurePayment() {
         "stripe-payment",
         {
           body: {
-            amount: amount
+            amount
           }
         }
       );
@@ -1425,8 +1931,10 @@ async function startSecurePayment() {
     }
 
     if (
-      typeof data.url !== "string" ||
-      data.url.length === 0
+      typeof data.url !==
+        "string" ||
+      data.url.length ===
+        0
     ) {
       throw new Error(
         "Stripe did not return a checkout URL."
@@ -1459,7 +1967,9 @@ async function startSecurePayment() {
     }
 
     if (button) {
-      button.disabled = false;
+      button.disabled =
+        false;
+
       button.textContent =
         "Secure Payment";
     }
@@ -1476,14 +1986,6 @@ async function startSecurePayment() {
 
 /* =========================================================
    GLOBAL PAYMENT BUTTON
-   =========================================================
-
-   Event delegation is intentional.
-
-   The payment button is created dynamically inside
-   openDashboard(), so we listen on document instead
-   of trying to attach the listener before the button
-   exists.
    ========================================================= */
 
 document.addEventListener(
@@ -1520,53 +2022,63 @@ refreshAuthButton();
    ========================================================= */
 
 if ($("menuButton")) {
-  $("menuButton").onclick = () => {
-    const nav =
-      document.querySelector("nav");
+  $("menuButton").onclick =
+    () => {
+      const nav =
+        document.querySelector(
+          "nav"
+        );
 
-    if (!nav) {
-      return;
-    }
+      if (!nav) {
+        return;
+      }
 
-    nav.style.display =
-      nav.style.display === "flex"
-        ? ""
-        : "flex";
+      nav.style.display =
+        nav.style.display ===
+        "flex"
+          ? ""
+          : "flex";
 
-    nav.style.position =
-      "absolute";
+      nav.style.position =
+        "absolute";
 
-    nav.style.top =
-      "76px";
+      nav.style.top =
+        "76px";
 
-    nav.style.left =
-      "0";
+      nav.style.left =
+        "0";
 
-    nav.style.right =
-      "0";
+      nav.style.right =
+        "0";
 
-    nav.style.padding =
-      "20px";
+      nav.style.padding =
+        "20px";
 
-    nav.style.background =
-      "#f5f5f2";
+      nav.style.background =
+        "#f5f5f2";
 
-    nav.style.flexDirection =
-      "column";
-  };
+      nav.style.flexDirection =
+        "column";
+    };
 }
 
 /* =========================================================
    PASSWORD RECOVERY SESSION
    ========================================================= */
 
-if (configured && supabase) {
+if (
+  configured &&
+  supabase
+) {
   supabase.auth
     .getSession()
-    .catch((error) => {
-      console.error(
-        "Jbad auth session error:",
-        error
-      );
-    });
+    .catch(
+      (error) => {
+        console.error(
+          "Jbad auth session error:",
+          error
+        );
+      }
+    );
 }
+```
