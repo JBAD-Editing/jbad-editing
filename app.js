@@ -35,7 +35,10 @@ const resetPasswordModal = $("resetPasswordModal");
 let authMode = "signup";
 
 function siteUrl() {
-  return window.location.origin + window.location.pathname;
+  return (
+    window.location.origin +
+    window.location.pathname
+  );
 }
 
 function showModal(el) {
@@ -46,11 +49,8 @@ function hideModal(el) {
   el.classList.add("hidden");
 }
 
-/* -------------------------
-   MODAL BUTTONS
-------------------------- */
-
-$("closeAuth").onclick = () => hideModal(authModal);
+$("closeAuth").onclick = () =>
+  hideModal(authModal);
 
 $("closeDashboard").onclick = () =>
   hideModal(dashboardModal);
@@ -58,16 +58,11 @@ $("closeDashboard").onclick = () =>
 $("closeResetPassword").onclick = () =>
   hideModal(resetPasswordModal);
 
-/* -------------------------
-   JOIN AS EDITOR
-------------------------- */
-
 $("joinButton").onclick = () => {
   if (!configured) {
     alert(
       "Jbad Editing is not connected to Supabase yet. Open supabase-config.js, add your Project URL and public/publishable key, save it, then reload the site."
     );
-
     return;
   }
 
@@ -75,16 +70,11 @@ $("joinButton").onclick = () => {
   showModal(authModal);
 };
 
-/* -------------------------
-   AUTH BUTTON
-------------------------- */
-
 $("authButton").onclick = async () => {
   if (!configured) {
     alert(
       "Jbad Editing is not connected to Supabase yet. Open supabase-config.js, add your Project URL and public/publishable key, save it, then reload the site."
     );
-
     return;
   }
 
@@ -99,10 +89,6 @@ $("authButton").onclick = async () => {
     showModal(authModal);
   }
 };
-
-/* -------------------------
-   AUTH MODE
-------------------------- */
 
 function setAuthMode(mode) {
   authMode = mode;
@@ -132,10 +118,10 @@ function setAuthMode(mode) {
       ? "Need an account? Sign up"
       : "Already have an account? Log in";
 
-  $("forgotPassword").style.display =
-    mode === "login"
-      ? "block"
-      : "none";
+  $("forgotPassword").classList.toggle(
+    "hidden",
+    mode !== "login"
+  );
 
   $("authMessage").textContent = "";
 }
@@ -147,21 +133,17 @@ $("toggleAuthMode").onclick = () =>
       : "login"
   );
 
-/* -------------------------
-   PASSWORD RECOVERY
-------------------------- */
-
 $("forgotPassword").onclick = async () => {
   if (!supabase) return;
 
-  const email = $("email").value.trim();
+  const email =
+    $("email").value.trim();
 
   if (!email) {
     $("authMessage").textContent =
       "Enter your email address first.";
 
     $("email").focus();
-
     return;
   }
 
@@ -186,10 +168,6 @@ $("forgotPassword").onclick = async () => {
   $("authMessage").textContent =
     "Recovery email sent. Check your inbox and spam folder.";
 };
-
-/* -------------------------
-   RESET PASSWORD
-------------------------- */
 
 $("resetPasswordForm").addEventListener(
   "submit",
@@ -231,17 +209,11 @@ $("resetPasswordForm").addEventListener(
 
     setTimeout(() => {
       hideModal(resetPasswordModal);
-
       setAuthMode("login");
-
       showModal(authModal);
     }, 900);
   }
 );
-
-/* -------------------------
-   LOGIN / SIGNUP
-------------------------- */
 
 $("authForm").addEventListener(
   "submit",
@@ -258,8 +230,6 @@ $("authForm").addEventListener(
 
     $("authMessage").textContent =
       "Working…";
-
-    /* LOGIN */
 
     if (authMode === "login") {
       const { error } =
@@ -284,8 +254,6 @@ $("authForm").addEventListener(
       return;
     }
 
-    /* SIGNUP */
-
     const display_name =
       $("displayName").value.trim() ||
       "Jbad Editor";
@@ -293,10 +261,6 @@ $("authForm").addEventListener(
     const speciality =
       $("speciality").value.trim() ||
       "Video & Photo Editor";
-
-    const contact_email =
-      $("contactEmail").value.trim() ||
-      email;
 
     const { data, error } =
       await supabase.auth.signUp({
@@ -319,144 +283,17 @@ $("authForm").addEventListener(
     }
 
     if (data.session) {
-      await saveProfile(
-        data.session.user.id,
-        {
-          display_name,
-          speciality,
-          contact_email
-        }
-      );
-
       hideModal(authModal);
 
       await refreshAuthButton();
 
       openDashboard();
-
-      return;
+    } else {
+      $("authMessage").textContent =
+        "Account created. Check your email to confirm your account, then log in.";
     }
-
-    $("authMessage").textContent =
-      "Account created. Check your email to confirm your account, then log in.";
   }
 );
-
-/* -------------------------
-   SAVE PROFILE
-------------------------- */
-
-async function saveProfile(userId, profile) {
-  if (!supabase) return;
-
-  const { error } =
-    await supabase
-      .from("profiles")
-      .upsert(
-        {
-          id: userId,
-          display_name: profile.display_name,
-          speciality: profile.speciality,
-          contact_email: profile.contact_email,
-          updated_at: new Date().toISOString()
-        },
-        {
-          onConflict: "id"
-        }
-      );
-
-  if (error) {
-    console.error(
-      "Could not save profile:",
-      error
-    );
-  }
-}
-
-/* -------------------------
-   STRIPE CONNECT
-------------------------- */
-
-const STRIPE_CONNECT_FUNCTION =
-  "https://ckppghlnztgatmhprdqa.supabase.co/functions/v1/stripe-connect";
-
-async function connectStripe() {
-  if (!supabase) {
-    alert("Jbad Editing is not connected to Supabase yet.");
-    return;
-  }
-
-  const {
-    data: { session }
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    setAuthMode("login");
-    showModal(authModal);
-    return;
-  }
-
-  const button = $("connectStripeButton");
-  const message = $("stripeMessage");
-
-  if (button) {
-    button.disabled = true;
-    button.textContent = "Connecting to Stripe…";
-  }
-
-  if (message) {
-    message.textContent = "Opening Stripe securely…";
-  }
-
-  try {
-    const response = await fetch(STRIPE_CONNECT_FUNCTION, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.access_token}`,
-        apikey: SUPABASE_ANON_KEY
-      },
-      body: JSON.stringify({})
-    });
-
-    const result = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      throw new Error(
-        result.error || "Unable to connect Stripe."
-      );
-    }
-
-    if (!result.url) {
-      throw new Error(
-        "Stripe did not return an onboarding link."
-      );
-    }
-
-    window.location.href = result.url;
-  } catch (error) {
-    console.error(
-      "Stripe connection error:",
-      error
-    );
-
-    if (message) {
-      message.textContent =
-        error?.message ||
-        "Unable to connect Stripe.";
-    }
-
-    if (button) {
-      button.disabled = false;
-      button.textContent =
-        "Connect Stripe account";
-    }
-  }
-}
-
-/* -------------------------
-   AUTH STATE
-------------------------- */
 
 async function refreshAuthButton() {
   if (!supabase) return;
@@ -484,10 +321,6 @@ supabase?.auth.onAuthStateChange(
   }
 );
 
-/* -------------------------
-   PUBLIC CONTENT
-------------------------- */
-
 async function loadPublicContent() {
   if (!configured) {
     $("editorsGrid").innerHTML =
@@ -509,12 +342,9 @@ async function loadPublicContent() {
   } = await supabase
     .from("profiles")
     .select("*")
-    .order(
-      "created_at",
-      {
-        ascending: false
-      }
-    );
+    .order("created_at", {
+      ascending: false
+    });
 
   if (profileError) {
     $("editorsGrid").innerHTML =
@@ -538,12 +368,9 @@ async function loadPublicContent() {
     .select(
       "*, profiles(display_name, speciality)"
     )
-    .order(
-      "created_at",
-      {
-        ascending: false
-      }
-    );
+    .order("created_at", {
+      ascending: false
+    });
 
   if (postError) {
     $("featuredGrid").innerHTML =
@@ -560,58 +387,28 @@ async function loadPublicContent() {
   }
 }
 
-/* -------------------------
-   EDITOR CARD
-------------------------- */
-
 function editorCard(p) {
-  const initials =
-    escapeHtml(
-      (p.display_name || "J")
-        .slice(0, 1)
-        .toUpperCase()
-    );
-
-  const contactButton =
-    p.contact_email
-      ? `
-        <a
-          class="button primary"
-          href="mailto:${escapeAttr(
-            p.contact_email
-          )}?subject=${encodeURIComponent(
-            "Jbad Editing enquiry for " +
-            (p.display_name || "Editor")
-          )}"
-        >
-          Contact Editor
-        </a>
-      `
-      : `
-        <span class="small muted">
-          Contact details not available
-        </span>
-      `;
+  const initials = escapeHtml(
+    (p.display_name || "J")
+      .slice(0, 1)
+      .toUpperCase()
+  );
 
   return `
     <article class="editor-card">
-
       <div class="editor-avatar">
         ${
           p.avatar_url
-            ? `
-              <img
+            ? `<img
                 src="${safeUrl(p.avatar_url)}"
                 alt=""
                 style="width:100%;height:100%;object-fit:cover"
-              >
-            `
+              >`
             : initials
         }
       </div>
 
       <div class="editor-info">
-
         <h3>
           ${escapeHtml(p.display_name)}
         </h3>
@@ -624,53 +421,28 @@ function editorCard(p) {
 
         ${
           p.bio
-            ? `
-              <p class="small">
+            ? `<p class="small">
                 ${escapeHtml(p.bio)}
-              </p>
-            `
+              </p>`
             : ""
         }
 
-        <div
-          style="
-            display:flex;
-            gap:10px;
-            flex-wrap:wrap;
-            margin-top:18px;
-          "
-        >
-
-          ${contactButton}
-
-          ${
-            p.website_url
-              ? `
-                <a
-                  class="button secondary"
-                  target="_blank"
-                  rel="noopener"
-                  href="${safeUrl(
-                    p.website_url
-                  )}"
-                >
-                  Portfolio ↗
-                </a>
-              `
-              : ""
-          }
-
-        </div>
-
+        ${
+          p.website_url
+            ? `<a
+                class="small"
+                target="_blank"
+                rel="noopener"
+                href="${safeUrl(p.website_url)}"
+              >
+                Portfolio ↗
+              </a>`
+            : ""
+        }
       </div>
-
     </article>
   `;
 }
-
-/* -------------------------
-   WORK CARD
-------------------------- */
 
 function workCard(p) {
   const editor =
@@ -679,30 +451,24 @@ function workCard(p) {
 
   const media =
     p.media_type === "video"
-      ? `
-        <video
+      ? `<video
           src="${safeUrl(p.media_url)}"
           controls
           preload="metadata"
-        ></video>
-      `
-      : `
-        <img
+        ></video>`
+      : `<img
           src="${safeUrl(p.media_url)}"
           alt="${escapeHtml(p.title)}"
           loading="lazy"
-        >
-      `;
+        >`;
 
   return `
     <article class="work-card">
-
       <div class="work-media">
         ${media}
       </div>
 
       <div class="work-info">
-
         <h3>
           ${escapeHtml(p.title)}
         </h3>
@@ -713,23 +479,22 @@ function workCard(p) {
 
         ${
           p.description
-            ? `
-              <p class="small">
-                ${escapeHtml(p.description)}
-              </p>
-            `
+            ? `<p class="small">
+                ${escapeHtml(
+                  p.description
+                )}
+              </p>`
             : ""
         }
-
       </div>
-
     </article>
   `;
 }
 
-/* -------------------------
+
+/* =========================================================
    EDITOR DASHBOARD
-------------------------- */
+   ========================================================= */
 
 async function openDashboard() {
   if (!supabase) return;
@@ -740,22 +505,29 @@ async function openDashboard() {
 
   if (!session) {
     setAuthMode("login");
-
     showModal(authModal);
-
     return;
   }
 
   const {
-    data: profile
+    data: profile,
+    error: profileError
   } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", session.user.id)
     .single();
 
+  if (profileError) {
+    console.error(
+      "Profile error:",
+      profileError
+    );
+  }
+
   const {
-    data: posts
+    data: posts,
+    error: postsError
   } = await supabase
     .from("editor_posts")
     .select("*")
@@ -763,23 +535,23 @@ async function openDashboard() {
       "editor_id",
       session.user.id
     )
-    .order(
-      "created_at",
-      {
-        ascending: false
-      }
+    .order("created_at", {
+      ascending: false
+    });
+
+  if (postsError) {
+    console.error(
+      "Posts error:",
+      postsError
     );
+  }
 
   $("dashboardContent").innerHTML = `
 
-    <form
-      id="profileForm"
-      class="dashboard-grid"
-    >
+    <form id="profileForm" class="dashboard-grid">
 
       <label>
         Display name
-
         <input
           id="dName"
           value="${escapeAttr(
@@ -792,7 +564,6 @@ async function openDashboard() {
 
       <label>
         Speciality
-
         <input
           id="dSpeciality"
           value="${escapeAttr(
@@ -802,27 +573,18 @@ async function openDashboard() {
         >
       </label>
 
-      <label>
-        Contact email
-
-        <input
-          id="dContactEmail"
-          type="email"
-          value="${escapeAttr(
-            profile?.contact_email || ""
-          )}"
-          maxlength="254"
-          placeholder="Email clients should use to contact you"
-        >
-
-        <span class="small">
-          This email is used by the Contact Editor button.
-        </span>
+      <label class="full-row">
+        Bio
+        <textarea
+          id="dBio"
+          maxlength="500"
+        >${escapeHtml(
+          profile?.bio || ""
+        )}</textarea>
       </label>
 
       <label>
         Website / portfolio URL
-
         <input
           id="dWebsite"
           type="url"
@@ -833,20 +595,8 @@ async function openDashboard() {
         >
       </label>
 
-      <label class="full-row">
-        Bio
-
-        <textarea
-          id="dBio"
-          maxlength="500"
-        >${escapeHtml(
-          profile?.bio || ""
-        )}</textarea>
-      </label>
-
       <label>
         Avatar URL
-
         <input
           id="dAvatar"
           type="url"
@@ -874,61 +624,51 @@ async function openDashboard() {
 
     </form>
 
-    <hr
-      style="
-        border:0;
-        border-top:1px solid #ddd;
-        margin:35px 0;
-      "
-    >
 
-    <h3>
-      Payments
-    </h3>
-
-    <p class="muted">
-      Connect Stripe so customers can pay you through Jbad Editing. Stripe securely handles your payment and payout details.
-    </p>
+    <!-- STRIPE CONNECT -->
 
     <div
+      id="stripePanel"
       style="
-        display:flex;
-        gap:12px;
-        align-items:center;
-        flex-wrap:wrap;
-        margin:18px 0 8px
+        margin-top:30px;
+        padding:24px;
+        border:1px solid #ddd;
+        background:#fff;
       "
     >
+
+      <p class="eyebrow">
+        PAYMENTS
+      </p>
+
+      <h3 style="margin:0 0 8px">
+        Stripe payments
+      </h3>
+
+      <p
+        id="stripeStatus"
+        class="muted"
+        style="margin-bottom:18px"
+      >
+        Checking Stripe connection…
+      </p>
+
       <button
         class="button primary"
         type="button"
-        id="connectStripeButton"
+        id="stripeButton"
       >
-        ${
-          profile?.stripe_account_id
-            ? "Continue Stripe setup"
-            : "Connect Stripe account"
-        }
+        Connect Stripe account
       </button>
 
-      <span
-        class="small"
-        id="stripeStatus"
-      >
-        ${
-          profile?.stripe_onboarding_complete
-            ? "Stripe is connected and ready."
-            : profile?.stripe_account_id
-              ? "Stripe account created. Finish the setup to receive payments."
-              : "Not connected yet."
-        }
-      </span>
+      <p
+        id="stripeMessage"
+        class="form-message"
+        style="margin-top:12px"
+      ></p>
+
     </div>
 
-    <p
-      id="stripeMessage"
-      class="form-message"
-    ></p>
 
     <hr
       style="
@@ -937,6 +677,7 @@ async function openDashboard() {
         margin:35px 0
       "
     >
+
 
     <h3>
       Publish showcase work
@@ -949,7 +690,6 @@ async function openDashboard() {
 
       <label>
         Title
-
         <input
           id="postTitle"
           maxlength="100"
@@ -977,6 +717,7 @@ async function openDashboard() {
             Video
           </option>
         </select>
+
       </label>
 
       <label class="full-row">
@@ -1017,10 +758,12 @@ async function openDashboard() {
 
     </form>
 
+
     <p
       id="postMessage"
       class="form-message"
     ></p>
+
 
     <h3>
       Your posts
@@ -1032,14 +775,14 @@ async function openDashboard() {
         posts?.length
           ? posts
               .map(
-                (p) =>
-                  `
+                (p) => `
                   <div class="post-row">
 
                     <div>
-
                       <b>
-                        ${escapeHtml(p.title)}
+                        ${escapeHtml(
+                          p.title
+                        )}
                       </b>
 
                       <div class="small">
@@ -1047,12 +790,13 @@ async function openDashboard() {
                           p.media_type
                         )}
                       </div>
-
                     </div>
 
                     <button
                       class="button danger delete-post"
-                      data-id="${p.id}"
+                      data-id="${escapeAttr(
+                        p.id
+                      )}"
                       data-url="${escapeAttr(
                         p.media_url
                       )}"
@@ -1061,14 +805,14 @@ async function openDashboard() {
                     </button>
 
                   </div>
-                  `
+                `
               )
               .join("")
           : `
-            <p class="muted">
-              You haven't published anything yet.
-            </p>
-          `
+              <p class="muted">
+                You haven't published anything yet.
+              </p>
+            `
       }
 
     </div>
@@ -1076,52 +820,44 @@ async function openDashboard() {
 
   showModal(dashboardModal);
 
-  const connectStripeButton =
-    $("connectStripeButton");
 
-  if (connectStripeButton) {
-    connectStripeButton.onclick =
-      connectStripe;
-  }
-
-  /* SAVE PROFILE */
+  /* =========================================================
+     PROFILE
+     ========================================================= */
 
   $("profileForm").onsubmit =
     async (e) => {
       e.preventDefault();
 
-      const { error } =
-        await supabase
-          .from("profiles")
-          .update({
-            display_name:
-              $("dName").value.trim(),
+      const {
+        error
+      } = await supabase
+        .from("profiles")
+        .update({
+          display_name:
+            $("dName").value.trim(),
 
-            speciality:
-              $("dSpeciality").value.trim(),
+          speciality:
+            $("dSpeciality").value.trim(),
 
-            contact_email:
-              $("dContactEmail").value.trim() ||
-              null,
+          bio:
+            $("dBio").value.trim(),
 
-            bio:
-              $("dBio").value.trim(),
+          website_url:
+            $("dWebsite").value.trim() ||
+            null,
 
-            website_url:
-              $("dWebsite").value.trim() ||
-              null,
+          avatar_url:
+            $("dAvatar").value.trim() ||
+            null,
 
-            avatar_url:
-              $("dAvatar").value.trim() ||
-              null,
-
-            updated_at:
-              new Date().toISOString()
-          })
-          .eq(
-            "id",
-            session.user.id
-          );
+          updated_at:
+            new Date().toISOString()
+        })
+        .eq(
+          "id",
+          session.user.id
+        );
 
       alert(
         error
@@ -1130,25 +866,242 @@ async function openDashboard() {
       );
 
       if (!error) {
-        await loadPublicContent();
+        loadPublicContent();
       }
     };
 
-  /* LOG OUT */
+
+  /* =========================================================
+     LOGOUT
+     ========================================================= */
 
   $("logoutButton").onclick =
     async () => {
       await supabase.auth.signOut();
 
-      hideModal(dashboardModal);
+      hideModal(
+        dashboardModal
+      );
 
       refreshAuthButton();
     };
 
-  /* PUBLISH POST */
+
+  /* =========================================================
+     STRIPE CONNECT
+     ========================================================= */
+
+  const stripeStatus =
+    $("stripeStatus");
+
+  const stripeButton =
+    $("stripeButton");
+
+  const stripeMessage =
+    $("stripeMessage");
+
+
+  async function checkStripeConnection() {
+
+    stripeStatus.textContent =
+      "Checking Stripe connection…";
+
+    stripeMessage.textContent = "";
+
+    stripeButton.disabled = true;
+
+    stripeButton.textContent =
+      "Checking Stripe…";
+
+
+    try {
+
+      /*
+       * Supabase automatically uses
+       * the currently logged-in user's
+       * session when invoking the
+       * Edge Function.
+       */
+
+      const {
+        data,
+        error
+      } =
+        await supabase.functions.invoke(
+          "stripe-connect",
+          {
+            body: {}
+          }
+        );
+
+
+      console.log(
+        "Stripe Connect response:",
+        data
+      );
+
+
+      if (error) {
+
+        console.error(
+          "Stripe Connect function error:",
+          error
+        );
+
+        throw new Error(
+          error.message ||
+          "Unable to contact Stripe."
+        );
+      }
+
+
+      if (!data) {
+
+        throw new Error(
+          "Stripe returned an empty response."
+        );
+      }
+
+
+      /*
+       * ACCOUNT IS FULLY CONNECTED
+       */
+
+      if (
+        data.connected === true ||
+        (
+          data.chargesEnabled === true &&
+          data.payoutsEnabled === true &&
+          data.onboardingComplete === true
+        )
+      ) {
+
+        stripeStatus.textContent =
+          "✓ Stripe connected — payments and payouts are active.";
+
+        stripeButton.textContent =
+          "Stripe connected";
+
+        stripeButton.disabled =
+          true;
+
+        return;
+      }
+
+
+      /*
+       * STRIPE STILL NEEDS INFORMATION
+       */
+
+      if (
+        data.url &&
+        typeof data.url === "string"
+      ) {
+
+        stripeStatus.textContent =
+          "Your Stripe account needs some additional setup.";
+
+        stripeButton.textContent =
+          "Finish Stripe setup";
+
+        stripeButton.disabled =
+          false;
+
+        stripeButton.onclick =
+          () => {
+            window.location.href =
+              data.url;
+          };
+
+        return;
+      }
+
+
+      /*
+       * STRIPE ACCOUNT EXISTS BUT
+       * DIDN'T PROVIDE AN ONBOARDING URL.
+       */
+
+      if (
+        data.accountId &&
+        data.chargesEnabled === true &&
+        data.payoutsEnabled === true
+      ) {
+
+        stripeStatus.textContent =
+          "✓ Stripe connected — payments and payouts are active.";
+
+        stripeButton.textContent =
+          "Stripe connected";
+
+        stripeButton.disabled =
+          true;
+
+        return;
+      }
+
+
+      /*
+       * SOMETHING ELSE HAPPENED
+       */
+
+      stripeStatus.textContent =
+        data.message ||
+        "Stripe setup is not complete.";
+
+      stripeButton.textContent =
+        "Try Stripe setup again";
+
+      stripeButton.disabled =
+        false;
+
+      stripeButton.onclick =
+        checkStripeConnection;
+
+    } catch (error) {
+
+      console.error(
+        "Stripe connection error:",
+        error
+      );
+
+      stripeStatus.textContent =
+        "Unable to confirm your Stripe connection.";
+
+      stripeMessage.textContent =
+        error.message ||
+        "Something went wrong.";
+
+      stripeButton.textContent =
+        "Connect Stripe account";
+
+      stripeButton.disabled =
+        false;
+
+      stripeButton.onclick =
+        checkStripeConnection;
+    }
+  }
+
+
+  /*
+   * Start the Stripe check as soon
+   * as the dashboard opens.
+   */
+
+  stripeButton.onclick =
+    checkStripeConnection;
+
+  checkStripeConnection();
+
+
+  /* =========================================================
+     PUBLISH SHOWCASE WORK
+     ========================================================= */
 
   $("postForm").onsubmit =
     async (e) => {
+
       e.preventDefault();
 
       const file =
@@ -1157,12 +1110,15 @@ async function openDashboard() {
       const message =
         $("postMessage");
 
-      if (!file) return;
+      if (!file) {
+        return;
+      }
 
       if (
         file.size >
         50 * 1024 * 1024
       ) {
+
         message.textContent =
           "That file is over the 50 MB limit.";
 
@@ -1175,25 +1131,34 @@ async function openDashboard() {
       const type =
         $("postType").value;
 
+
       if (
         type === "image" &&
-        !file.type.startsWith("image/")
+        !file.type.startsWith(
+          "image/"
+        )
       ) {
+
         message.textContent =
           "Choose an image file.";
 
         return;
       }
 
+
       if (
         type === "video" &&
-        !file.type.startsWith("video/")
+        !file.type.startsWith(
+          "video/"
+        )
       ) {
+
         message.textContent =
           "Choose a video file.";
 
         return;
       }
+
 
       const safeName =
         file.name
@@ -1203,8 +1168,10 @@ async function openDashboard() {
             "-"
           );
 
+
       const path =
         `${session.user.id}/${crypto.randomUUID()}-${safeName}`;
+
 
       const {
         error: uploadError
@@ -1221,12 +1188,15 @@ async function openDashboard() {
             }
           );
 
+
       if (uploadError) {
+
         message.textContent =
           uploadError.message;
 
         return;
       }
+
 
       const {
         data: publicData
@@ -1234,6 +1204,7 @@ async function openDashboard() {
         supabase.storage
           .from("portfolio")
           .getPublicUrl(path);
+
 
       const {
         error: insertError
@@ -1261,7 +1232,9 @@ async function openDashboard() {
               type
           });
 
+
       if (insertError) {
+
         await supabase.storage
           .from("portfolio")
           .remove([path]);
@@ -1272,6 +1245,7 @@ async function openDashboard() {
         return;
       }
 
+
       message.textContent =
         "Published!";
 
@@ -1280,14 +1254,20 @@ async function openDashboard() {
       await loadPublicContent();
     };
 
-  /* DELETE POSTS */
+
+  /* =========================================================
+     DELETE POSTS
+     ========================================================= */
 
   document
-    .querySelectorAll(".delete-post")
+    .querySelectorAll(
+      ".delete-post"
+    )
     .forEach(
       (btn) =>
         (btn.onclick =
           async () => {
+
             if (
               !confirm(
                 "Delete this post?"
@@ -1296,24 +1276,34 @@ async function openDashboard() {
               return;
             }
 
+
             const url =
               btn.dataset.url;
+
 
             const marker =
               "/storage/v1/object/public/portfolio/";
 
+
             const path =
               url.includes(marker)
                 ? decodeURIComponent(
-                    url.split(marker)[1]
+                    url.split(
+                      marker
+                    )[1]
                   )
                 : null;
 
+
             if (path) {
+
               await supabase.storage
                 .from("portfolio")
-                .remove([path]);
+                .remove([
+                  path
+                ]);
             }
+
 
             await supabase
               .from("editor_posts")
@@ -1323,36 +1313,49 @@ async function openDashboard() {
                 btn.dataset.id
               );
 
+
             await openDashboard();
 
             await loadPublicContent();
+
           })
     );
 }
 
-/* -------------------------
-   URL / HTML HELPERS
-------------------------- */
+
+/* =========================================================
+   SECURITY / URL HELPERS
+   ========================================================= */
 
 function safeUrl(value) {
+
   try {
-    const u = new URL(
-      value,
-      window.location.href
-    );
+
+    const u =
+      new URL(
+        value,
+        window.location.href
+      );
 
     return [
       "http:",
       "https:"
-    ].includes(u.protocol)
+    ].includes(
+      u.protocol
+    )
       ? u.href
       : "#";
+
   } catch {
+
     return "#";
+
   }
 }
 
+
 function escapeHtml(value = "") {
+
   return String(value).replace(
     /[&<>"']/g,
     (c) =>
@@ -1364,21 +1367,32 @@ function escapeHtml(value = "") {
         "'": "&#039;"
       }[c])
   );
+
 }
+
 
 function escapeAttr(value = "") {
+
   return escapeHtml(value);
+
 }
 
-/* -------------------------
-   STARTUP
-------------------------- */
+
+/* =========================================================
+   INITIAL LOAD
+   ========================================================= */
 
 loadPublicContent();
 
 refreshAuthButton();
 
+
+/* =========================================================
+   MOBILE MENU
+   ========================================================= */
+
 $("menuButton").onclick = () => {
+
   const nav =
     document.querySelector("nav");
 
@@ -1409,7 +1423,17 @@ $("menuButton").onclick = () => {
     "column";
 };
 
+
+/*
+ * If Supabase redirects back here
+ * after a password-recovery email,
+ * the client emits PASSWORD_RECOVERY
+ * and the reset form above is shown
+ * automatically.
+ */
+
 if (configured) {
+
   supabase.auth
     .getSession()
     .catch(
@@ -1419,4 +1443,5 @@ if (configured) {
           error
         )
     );
+
 }
