@@ -932,14 +932,91 @@ async function openDashboard() {
 
     </div>
 
-    <div
-      id="paymentPanel"
+<div
+  id="paymentPanel"
+  style="
+    margin-top:20px;
+    padding:25px;
+    border:1px solid #ddd;
+    background:#fff;
+    border-radius:12px;
+  "
+>
+  <p class="eyebrow">
+    ACCOUNT FUNDS
+  </p>
+
+  <h3>
+    Add funds
+  </h3>
+
+  <p class="muted">
+    Add money securely to your Jbad Editing account.
+  </p>
+
+  <label>
+    Amount
+
+    <input
+      id="fundAmount"
+      type="number"
+      min="1"
+      step="0.01"
+      placeholder="50.00"
+    >
+  </label>
+
+  <p
+    class="small"
+    style="margin-top:10px;"
+  >
+    A 3.5% Jbad Editing service fee will be added before you pay.
+  </p>
+
+  <button
+    id="securePaymentButton"
+    class="button primary"
+    type="button"
+  >
+    Secure Payment
+  </button>
+
+  <div
+    style="
+      margin-top:15px;
+      padding:14px 16px;
+      border:1px solid #ddd;
+      border-radius:8px;
+      background:#f7f7f5;
+      font-size:13px;
+      line-height:1.5;
+    "
+  >
+    <strong
       style="
-        margin-top:20px;
-        padding:25px;
-        border:1px solid #ddd;
-        background:#fff;
-        border-radius:12px;
+        display:block;
+        margin-bottom:5px;
+        font-size:14px;
+      "
+    >
+      Important: Account Funds
+    </strong>
+
+    <p style="margin:0;">
+      By adding funds to your Jbad Editing account, you acknowledge
+      that funds added to your account balance are non-refundable and
+      non-withdrawable. Account funds may only be used for eligible
+      Jbad Editing services and cannot be transferred to a bank account
+      or withdrawn as cash.
+    </p>
+  </div>
+
+  <p
+    id="paymentMessage"
+    class="form-message"
+  ></p>
+
+</div>
       "
     >
 
