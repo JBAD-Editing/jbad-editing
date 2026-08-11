@@ -1,4 +1,3 @@
-```javascript
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   SUPABASE_URL,
@@ -882,141 +881,16 @@ async function openDashboard() {
         Available Jbad Editing account funds.
       </p>
 
-      <div
-        style="
-          margin-top:20px;
-          padding-top:20px;
-          border-top:1px solid #eee;
-        "
-      >
-
-        <h4
-          style="
-            margin:0 0 8px;
-          "
-        >
-          Withdraw funds
-        </h4>
-
-        <p class="muted">
-          Transfer available funds to your connected Stripe account.
-        </p>
-
-        <label>
-          Withdrawal amount
-          <input
-            id="withdrawAmount"
-            type="number"
-            min="1"
-            max="${balance.toFixed(2)}"
-            step="0.01"
-            placeholder="5.00"
-          >
-        </label>
-
-        <button
-          id="withdrawButton"
-          class="button primary"
-          type="button"
-          style="margin-top:12px;"
-        >
-          Withdraw
-        </button>
-
-        <p
-          id="withdrawMessage"
-          class="form-message"
-        ></p>
-
-      </div>
-
     </div>
 
-<div
-  id="paymentPanel"
-  style="
-    margin-top:20px;
-    padding:25px;
-    border:1px solid #ddd;
-    background:#fff;
-    border-radius:12px;
-  "
->
-  <p class="eyebrow">
-    ACCOUNT FUNDS
-  </p>
-
-  <h3>
-    Add funds
-  </h3>
-
-  <p class="muted">
-    Add money securely to your Jbad Editing account.
-  </p>
-
-  <label>
-    Amount
-
-    <input
-      id="fundAmount"
-      type="number"
-      min="1"
-      step="0.01"
-      placeholder="50.00"
-    >
-  </label>
-
-  <p
-    class="small"
-    style="margin-top:10px;"
-  >
-    A 3.5% Jbad Editing service fee will be added before you pay.
-  </p>
-
-  <button
-    id="securePaymentButton"
-    class="button primary"
-    type="button"
-  >
-    Secure Payment
-  </button>
-
-  <div
-    style="
-      margin-top:15px;
-      padding:14px 16px;
-      border:1px solid #ddd;
-      border-radius:8px;
-      background:#f7f7f5;
-      font-size:13px;
-      line-height:1.5;
-    "
-  >
-    <strong
+    <div
+      id="paymentPanel"
       style="
-        display:block;
-        margin-bottom:5px;
-        font-size:14px;
-      "
-    >
-      Important: Account Funds
-    </strong>
-
-    <p style="margin:0;">
-      By adding funds to your Jbad Editing account, you acknowledge
-      that funds added to your account balance are non-refundable and
-      non-withdrawable. Account funds may only be used for eligible
-      Jbad Editing services and cannot be transferred to a bank account
-      or withdrawn as cash.
-    </p>
-  </div>
-
-  <p
-    id="paymentMessage"
-    class="form-message"
-  ></p>
-
-</div>
+        margin-top:20px;
+        padding:25px;
+        border:1px solid #ddd;
+        background:#fff;
+        border-radius:12px;
       "
     >
 
@@ -1058,6 +932,38 @@ async function openDashboard() {
       >
         Secure Payment
       </button>
+
+      <div
+        style="
+          margin-top:15px;
+          padding:14px 16px;
+          border:1px solid #ddd;
+          border-radius:8px;
+          background:#f7f7f5;
+          font-size:13px;
+          line-height:1.5;
+        "
+      >
+
+        <strong
+          style="
+            display:block;
+            margin-bottom:5px;
+            font-size:14px;
+          "
+        >
+          Important: Account Funds
+        </strong>
+
+        <p style="margin:0;">
+          By adding funds to your Jbad Editing account, you acknowledge
+          that funds added to your account balance are non-refundable
+          and non-withdrawable. Account funds may only be used for
+          eligible Jbad Editing services and cannot be transferred to
+          a bank account or withdrawn as cash.
+        </p>
+
+      </div>
 
       <p
         id="paymentMessage"
@@ -1323,141 +1229,6 @@ async function openDashboard() {
 
       await refreshAuthButton();
     };
-
-  /* =======================================================
-     WITHDRAW
-     ======================================================= */
-
-  const withdrawButton =
-    $("withdrawButton");
-
-  const withdrawAmount =
-    $("withdrawAmount");
-
-  const withdrawMessage =
-    $("withdrawMessage");
-
-  if (withdrawButton) {
-    withdrawButton.onclick =
-      async () => {
-        const pounds =
-          Number(
-            withdrawAmount.value
-          );
-
-        if (
-          !Number.isFinite(
-            pounds
-          ) ||
-          pounds <= 0
-        ) {
-          withdrawMessage.textContent =
-            "Enter a valid withdrawal amount.";
-
-          return;
-        }
-
-        if (
-          pounds < 1
-        ) {
-          withdrawMessage.textContent =
-            "Minimum withdrawal is £1.00.";
-
-          return;
-        }
-
-        if (
-          pounds > balance
-        ) {
-          withdrawMessage.textContent =
-            "You cannot withdraw more than your available balance.";
-
-          return;
-        }
-
-        const amount =
-          Math.round(
-            pounds * 100
-          );
-
-        withdrawButton.disabled =
-          true;
-
-        withdrawButton.textContent =
-          "Processing...";
-
-        withdrawMessage.textContent =
-          "Processing your withdrawal...";
-
-        try {
-          const {
-            data,
-            error
-          } =
-            await supabase.functions.invoke(
-              "stripe-withdraw",
-              {
-                body: {
-                  amount
-                }
-              }
-            );
-
-          console.log(
-            "stripe-withdraw response:",
-            data,
-            error
-          );
-
-          if (error) {
-            throw new Error(
-              error.message ||
-              "Withdrawal request failed."
-            );
-          }
-
-          if (
-            !data ||
-            data.success !== true
-          ) {
-            throw new Error(
-              data?.error ||
-              "Withdrawal failed."
-            );
-          }
-
-          withdrawMessage.textContent =
-            `Withdrawal successful. £${pounds.toFixed(
-              2
-            )} has been transferred to your Stripe account.`;
-
-          withdrawAmount.value =
-            "";
-
-          /*
-           * Reload the dashboard so the displayed
-           * balance comes directly from Supabase.
-           */
-          await openDashboard();
-
-        } catch (error) {
-          console.error(
-            "Withdrawal error:",
-            error
-          );
-
-          withdrawMessage.textContent =
-            error.message ||
-            "Unable to process withdrawal.";
-
-          withdrawButton.disabled =
-            false;
-
-          withdrawButton.textContent =
-            "Withdraw";
-        }
-      };
-  }
 
   /* =======================================================
      STRIPE CONNECT
@@ -1817,9 +1588,6 @@ async function openDashboard() {
 
 /* =========================================================
    SECURE PAYMENT
-   IMPORTANT:
-   This function is global so the payment button can
-   always find it after the dashboard is rendered.
    ========================================================= */
 
 async function startSecurePayment() {
@@ -2158,4 +1926,3 @@ if (
       }
     );
 }
-```
