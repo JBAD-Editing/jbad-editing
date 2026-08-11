@@ -318,11 +318,6 @@ $("authForm").addEventListener(
       return;
     }
 
-    /*
-      If Supabase immediately creates a session,
-      create/update the profile.
-    */
-
     if (data.session) {
       await saveProfile(
         data.session.user.id,
@@ -341,15 +336,6 @@ $("authForm").addEventListener(
 
       return;
     }
-
-    /*
-      Email confirmation is enabled.
-      The profile is normally created by the
-      database trigger if your project already
-      has one. The contact email can then be
-      entered after confirmation from the
-      dashboard.
-    */
 
     $("authMessage").textContent =
       "Account created. Check your email to confirm your account, then log in.";
@@ -384,6 +370,87 @@ async function saveProfile(userId, profile) {
       "Could not save profile:",
       error
     );
+  }
+}
+
+/* -------------------------
+   STRIPE CONNECT
+------------------------- */
+
+const STRIPE_CONNECT_FUNCTION =
+  "https://ckppghlnztgatmhprdqa.supabase.co/functions/v1/stripe-connect";
+
+async function connectStripe() {
+  if (!supabase) {
+    alert("Jbad Editing is not connected to Supabase yet.");
+    return;
+  }
+
+  const {
+    data: { session }
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    setAuthMode("login");
+    showModal(authModal);
+    return;
+  }
+
+  const button = $("connectStripeButton");
+  const message = $("stripeMessage");
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Connecting to Stripe…";
+  }
+
+  if (message) {
+    message.textContent = "Opening Stripe securely…";
+  }
+
+  try {
+    const response = await fetch(STRIPE_CONNECT_FUNCTION, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+        apikey: SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({})
+    });
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        result.error || "Unable to connect Stripe."
+      );
+    }
+
+    if (!result.url) {
+      throw new Error(
+        "Stripe did not return an onboarding link."
+      );
+    }
+
+    window.location.href = result.url;
+  } catch (error) {
+    console.error(
+      "Stripe connection error:",
+      error
+    );
+
+    if (message) {
+      message.textContent =
+        error?.message ||
+        "Unable to connect Stripe.";
+    }
+
+    if (button) {
+      button.disabled = false;
+      button.textContent =
+        "Connect Stripe account";
+    }
   }
 }
 
@@ -510,7 +577,9 @@ function editorCard(p) {
       ? `
         <a
           class="button primary"
-          href="mailto:${escapeAttr(p.contact_email)}?subject=${encodeURIComponent(
+          href="mailto:${escapeAttr(
+            p.contact_email
+          )}?subject=${encodeURIComponent(
             "Jbad Editing enquiry for " +
             (p.display_name || "Editor")
           )}"
@@ -581,7 +650,9 @@ function editorCard(p) {
                   class="button secondary"
                   target="_blank"
                   rel="noopener"
-                  href="${safeUrl(p.website_url)}"
+                  href="${safeUrl(
+                    p.website_url
+                  )}"
                 >
                   Portfolio ↗
                 </a>
@@ -812,6 +883,62 @@ async function openDashboard() {
     >
 
     <h3>
+      Payments
+    </h3>
+
+    <p class="muted">
+      Connect Stripe so customers can pay you through Jbad Editing. Stripe securely handles your payment and payout details.
+    </p>
+
+    <div
+      style="
+        display:flex;
+        gap:12px;
+        align-items:center;
+        flex-wrap:wrap;
+        margin:18px 0 8px
+      "
+    >
+      <button
+        class="button primary"
+        type="button"
+        id="connectStripeButton"
+      >
+        ${
+          profile?.stripe_account_id
+            ? "Continue Stripe setup"
+            : "Connect Stripe account"
+        }
+      </button>
+
+      <span
+        class="small"
+        id="stripeStatus"
+      >
+        ${
+          profile?.stripe_onboarding_complete
+            ? "Stripe is connected and ready."
+            : profile?.stripe_account_id
+              ? "Stripe account created. Finish the setup to receive payments."
+              : "Not connected yet."
+        }
+      </span>
+    </div>
+
+    <p
+      id="stripeMessage"
+      class="form-message"
+    ></p>
+
+    <hr
+      style="
+        border:0;
+        border-top:1px solid #ddd;
+        margin:35px 0
+      "
+    >
+
+    <h3>
       Publish showcase work
     </h3>
 
@@ -948,6 +1075,14 @@ async function openDashboard() {
   `;
 
   showModal(dashboardModal);
+
+  const connectStripeButton =
+    $("connectStripeButton");
+
+  if (connectStripeButton) {
+    connectStripeButton.onclick =
+      connectStripe;
+  }
 
   /* SAVE PROFILE */
 
