@@ -1,41 +1,72 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./supabase-config.js";
 
-const supabase = createClient(
+import {
   SUPABASE_URL,
   SUPABASE_ANON_KEY
+} from "./supabase-config.js";
+
+const configured = Boolean(
+  SUPABASE_URL &&
+  SUPABASE_ANON_KEY &&
+  !SUPABASE_URL.includes("PASTE_") &&
+  !SUPABASE_ANON_KEY.includes("PASTE_")
 );
 
-const $ = (id) => document.getElementById(id);
+const supabase = configured
+  ? createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    )
+  : null;
 
-const authModal = $("authModal");
-const dashboardModal = $("dashboardModal");
-const resetPasswordModal = $("resetPasswordModal");
+const $ = (id) =>
+  document.getElementById(id);
+
+const authModal =
+  $("authModal");
+
+const dashboardModal =
+  $("dashboardModal");
+
+const resetPasswordModal =
+  $("resetPasswordModal");
 
 let authMode = "signup";
 
+function siteUrl() {
+  return (
+    window.location.origin +
+    window.location.pathname
+  );
+}
+
 function showModal(element) {
-  if (element) element.classList.remove("hidden");
+  if (element) {
+    element.classList.remove(
+      "hidden"
+    );
+  }
 }
 
 function hideModal(element) {
-  if (element) element.classList.add("hidden");
-}
-
-function siteUrl() {
-  return window.location.origin + window.location.pathname;
+  if (element) {
+    element.classList.add(
+      "hidden"
+    );
+  }
 }
 
 function escapeHtml(value = "") {
-  return String(value).replace(/[&<>"']/g, function (character) {
-    return {
+  return String(value).replace(
+    /[&<>"']/g,
+    (character) => ({
       "&": "&amp;",
       "<": "&lt;",
       ">": "&gt;",
       '"': "&quot;",
       "'": "&#039;"
-    }[character];
-  });
+    }[character])
+  );
 }
 
 function escapeAttr(value = "") {
@@ -44,9 +75,15 @@ function escapeAttr(value = "") {
 
 function safeUrl(value) {
   try {
-    const url = new URL(value, window.location.href);
+    const url = new URL(
+      value,
+      window.location.href
+    );
 
-    if (url.protocol === "http:" || url.protocol === "https:") {
+    if (
+      url.protocol === "http:" ||
+      url.protocol === "https:"
+    ) {
       return url.href;
     }
 
@@ -58,28 +95,35 @@ function safeUrl(value) {
 
 /* AUTH */
 
-$("closeAuth").onclick = function () {
+$("closeAuth").onclick = () => {
   hideModal(authModal);
 };
 
-$("closeDashboard").onclick = function () {
+$("closeDashboard").onclick = () => {
   hideModal(dashboardModal);
 };
 
-$("closeResetPassword").onclick = function () {
+$("closeResetPassword").onclick = () => {
   hideModal(resetPasswordModal);
 };
 
 function setAuthMode(mode) {
   authMode = mode;
 
-  $("profileFields").classList.toggle("hidden", mode === "login");
+  $("profileFields").classList.toggle(
+    "hidden",
+    mode === "login"
+  );
 
   $("authSubmit").textContent =
-    mode === "login" ? "Log in" : "Create account";
+    mode === "login"
+      ? "Log in"
+      : "Create account";
 
   $("authTitle").textContent =
-    mode === "login" ? "Editor login" : "Join Jbad Editing";
+    mode === "login"
+      ? "Editor login"
+      : "Join Jbad Editing";
 
   $("authHint").textContent =
     mode === "login"
@@ -96,18 +140,38 @@ function setAuthMode(mode) {
     mode !== "login"
   );
 
-  $("authMessage").textContent = "";
+  $("authMessage").textContent =
+    "";
 }
 
-$("joinButton").onclick = function () {
+$("joinButton").onclick = () => {
+  if (!configured) {
+    alert(
+      "Supabase is not configured."
+    );
+    return;
+  }
+
   setAuthMode("signup");
   showModal(authModal);
 };
 
-$("authButton").onclick = async function () {
-  const result = await supabase.auth.getSession();
+$("authButton").onclick = async () => {
+  if (!configured) {
+    alert(
+      "Supabase is not configured."
+    );
+    return;
+  }
 
-  if (result.data.session) {
+  const {
+    data: {
+      session
+    }
+  } =
+    await supabase.auth.getSession();
+
+  if (session) {
     await openDashboard();
   } else {
     setAuthMode("login");
@@ -115,133 +179,212 @@ $("authButton").onclick = async function () {
   }
 };
 
-$("toggleAuthMode").onclick = function () {
-  setAuthMode(authMode === "login" ? "signup" : "login");
-};
-
-$("forgotPassword").onclick = async function () {
-  const email = $("email").value.trim();
-
-  if (!email) {
-    $("authMessage").textContent =
-      "Enter your email address first.";
-    return;
-  }
-
-  $("authMessage").textContent = "Sending recovery email...";
-
-  const result = await supabase.auth.resetPasswordForEmail(
-    email,
-    {
-      redirectTo: siteUrl()
-    }
+$("toggleAuthMode").onclick = () => {
+  setAuthMode(
+    authMode === "login"
+      ? "signup"
+      : "login"
   );
-
-  if (result.error) {
-    $("authMessage").textContent = result.error.message;
-    return;
-  }
-
-  $("authMessage").textContent =
-    "Recovery email sent. Check your inbox.";
 };
 
-$("authForm").addEventListener("submit", async function (event) {
-  event.preventDefault();
+$("forgotPassword").onclick =
+  async () => {
+    const email =
+      $("email").value.trim();
 
-  const email = $("email").value.trim();
-  const password = $("password").value;
-
-  $("authMessage").textContent = "Working...";
-
-  if (authMode === "login") {
-    const result = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    if (result.error) {
-      $("authMessage").textContent = result.error.message;
+    if (!email) {
+      $("authMessage").textContent =
+        "Enter your email address first.";
       return;
     }
 
-    hideModal(authModal);
-    await refreshAuthButton();
-    await openDashboard();
-    return;
-  }
-
-  const displayName =
-    $("displayName").value.trim() || "Jbad Editor";
-
-  const speciality =
-    $("speciality").value.trim() || "Video & Photo Editor";
-
-  const contactEmail =
-    $("contactEmail").value.trim() || email;
-
-  const result = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        display_name: displayName,
-        speciality: speciality,
-        contact_email: contactEmail
-      }
-    }
-  });
-
-  if (result.error) {
-    $("authMessage").textContent = result.error.message;
-    return;
-  }
-
-  if (result.data.session) {
-    hideModal(authModal);
-    await refreshAuthButton();
-    await openDashboard();
-  } else {
     $("authMessage").textContent =
-      "Account created. Check your email to confirm your account.";
+      "Sending recovery email...";
+
+    const {
+      error
+    } =
+      await supabase.auth.resetPasswordForEmail(
+        email,
+        {
+          redirectTo:
+            siteUrl()
+        }
+      );
+
+    if (error) {
+      $("authMessage").textContent =
+        error.message;
+      return;
+    }
+
+    $("authMessage").textContent =
+      "Recovery email sent. Check your inbox.";
+  };
+
+$("authForm").addEventListener(
+  "submit",
+  async (event) => {
+    event.preventDefault();
+
+    if (!supabase) {
+      return;
+    }
+
+    const email =
+      $("email").value.trim();
+
+    const password =
+      $("password").value;
+
+    $("authMessage").textContent =
+      "Working...";
+
+    if (
+      authMode === "login"
+    ) {
+      const {
+        error
+      } =
+        await supabase.auth.signInWithPassword(
+          {
+            email,
+            password
+          }
+        );
+
+      if (error) {
+        $("authMessage").textContent =
+          error.message;
+        return;
+      }
+
+      hideModal(authModal);
+
+      await refreshAuthButton();
+
+      await openDashboard();
+
+      return;
+    }
+
+    const displayName =
+      $("displayName")
+        .value
+        .trim() ||
+      "Jbad Editor";
+
+    const speciality =
+      $("speciality")
+        .value
+        .trim() ||
+      "Video & Photo Editor";
+
+    const contactEmail =
+      $("contactEmail")
+        .value
+        .trim() ||
+      email;
+
+    const {
+      data,
+      error
+    } =
+      await supabase.auth.signUp(
+        {
+          email,
+          password,
+          options: {
+            data: {
+              display_name:
+                displayName,
+              speciality:
+                speciality,
+              contact_email:
+                contactEmail
+            }
+          }
+        }
+      );
+
+    if (error) {
+      $("authMessage").textContent =
+        error.message;
+      return;
+    }
+
+    if (data.session) {
+      await saveProfile(
+        data.session.user.id,
+        {
+          display_name:
+            displayName,
+          speciality:
+            speciality,
+          contact_email:
+            contactEmail
+        }
+      );
+
+      hideModal(authModal);
+
+      await refreshAuthButton();
+
+      await openDashboard();
+    } else {
+      $("authMessage").textContent =
+        "Account created. Check your email to confirm your account, then log in.";
+    }
   }
-});
+);
 
 /* PASSWORD RESET */
 
 $("resetPasswordForm").addEventListener(
   "submit",
-  async function (event) {
+  async (event) => {
     event.preventDefault();
 
-    const password = $("newPassword").value;
-    const confirm = $("confirmPassword").value;
+    const password =
+      $("newPassword").value;
 
-    if (password !== confirm) {
+    const confirmation =
+      $("confirmPassword").value;
+
+    if (
+      password !==
+      confirmation
+    ) {
       $("resetPasswordMessage").textContent =
         "The passwords do not match.";
       return;
     }
 
-    $("resetPasswordMessage").textContent =
-      "Updating password...";
+    const {
+      error
+    } =
+      await supabase.auth.updateUser(
+        {
+          password
+        }
+      );
 
-    const result = await supabase.auth.updateUser({
-      password: password
-    });
-
-    if (result.error) {
+    if (error) {
       $("resetPasswordMessage").textContent =
-        result.error.message;
+        error.message;
       return;
     }
 
     $("resetPasswordMessage").textContent =
       "Password updated successfully.";
 
-    setTimeout(function () {
-      hideModal(resetPasswordModal);
+    setTimeout(() => {
+      hideModal(
+        resetPasswordModal
+      );
+
       setAuthMode("login");
+
       showModal(authModal);
     }, 1000);
   }
@@ -249,154 +392,321 @@ $("resetPasswordForm").addEventListener(
 
 /* AUTH STATE */
 
-supabase.auth.onAuthStateChange(function (event) {
-  refreshAuthButton();
+supabase?.auth.onAuthStateChange(
+  (event) => {
+    refreshAuthButton();
 
-  if (event === "PASSWORD_RECOVERY") {
-    showModal(resetPasswordModal);
+    if (
+      event ===
+      "PASSWORD_RECOVERY"
+    ) {
+      showModal(
+        resetPasswordModal
+      );
+    }
   }
-});
+);
 
 async function refreshAuthButton() {
-  const result = await supabase.auth.getSession();
+  if (!supabase) {
+    return;
+  }
 
-  $("authButton").textContent = result.data.session
-    ? "Editor dashboard"
-    : "Editor login";
+  const {
+    data: {
+      session
+    }
+  } =
+    await supabase.auth.getSession();
+
+  $("authButton").textContent =
+    session
+      ? "Editor dashboard"
+      : "Editor login";
+}
+
+/* PROFILE */
+
+async function saveProfile(
+  userId,
+  profile
+) {
+  if (!supabase) {
+    return;
+  }
+
+  const {
+    error
+  } =
+    await supabase
+      .from("profiles")
+      .upsert(
+        {
+          id: userId,
+          display_name:
+            profile.display_name,
+          speciality:
+            profile.speciality,
+          contact_email:
+            profile.contact_email,
+          updated_at:
+            new Date().toISOString()
+        },
+        {
+          onConflict:
+            "id"
+        }
+      );
+
+  if (error) {
+    console.error(
+      "Profile save error:",
+      error
+    );
+  }
 }
 
 /* PUBLIC CONTENT */
 
 async function loadPublicContent() {
-  const profilesResult = await supabase
-    .from("profiles")
-    .select("*")
-    .order("created_at", {
-      ascending: false
-    });
-
-  if (profilesResult.error) {
+  if (!configured) {
     $("editorsGrid").innerHTML =
-      '<div class="empty-state">' +
-      escapeHtml(profilesResult.error.message) +
-      "</div>";
-  } else {
-    const profiles = profilesResult.data || [];
+      `<div class="empty-state">
+        Supabase is not connected yet.
+      </div>`;
 
-    $("editorsGrid").innerHTML = profiles.length
-      ? profiles.map(editorCard).join("")
-      : '<div class="empty-state">No editors yet.</div>';
+    $("featuredGrid").innerHTML =
+      `<div class="empty-state">
+        Connect Supabase to show your portfolio.
+      </div>`;
+
+    return;
   }
 
-  const postsResult = await supabase
-    .from("editor_posts")
-    .select("*, profiles(display_name, speciality)")
-    .order("created_at", {
-      ascending: false
-    });
+  const {
+    data: profiles,
+    error: profileError
+  } =
+    await supabase
+      .from("profiles")
+      .select("*")
+      .order(
+        "created_at",
+        {
+          ascending:
+            false
+        }
+      );
 
-  if (postsResult.error) {
-    $("featuredGrid").innerHTML =
-      '<div class="empty-state">' +
-      escapeHtml(postsResult.error.message) +
-      "</div>";
+  if (profileError) {
+    $("editorsGrid").innerHTML =
+      `<div class="empty-state">
+        ${escapeHtml(
+          profileError.message
+        )}
+      </div>`;
   } else {
-    const posts = postsResult.data || [];
+    $("editorsGrid").innerHTML =
+      profiles?.length
+        ? profiles
+            .map(editorCard)
+            .join("")
+        : `<div class="empty-state">
+            No editors yet. Be the first to join.
+          </div>`;
+  }
 
-    $("featuredGrid").innerHTML = posts.length
-      ? posts.map(workCard).join("")
-      : '<div class="empty-state">No showcase posts yet.</div>';
+  const {
+    data: posts,
+    error: postError
+  } =
+    await supabase
+      .from("editor_posts")
+      .select(
+        "*, profiles(display_name, speciality)"
+      )
+      .order(
+        "created_at",
+        {
+          ascending:
+            false
+        }
+      );
+
+  if (postError) {
+    $("featuredGrid").innerHTML =
+      `<div class="empty-state">
+        ${escapeHtml(
+          postError.message
+        )}
+      </div>`;
+  } else {
+    $("featuredGrid").innerHTML =
+      posts?.length
+        ? posts
+            .map(workCard)
+            .join("")
+        : `<div class="empty-state">
+            No showcase posts yet.
+          </div>`;
   }
 }
 
 function editorCard(profile) {
-  const name = profile.display_name || "Jbad Editor";
-  const speciality = profile.speciality || "Editor";
+  const name =
+    profile.display_name ||
+    "Jbad Editor";
 
-  return (
-    '<article class="editor-card">' +
-      '<div class="editor-avatar">' +
-        (
+  return `
+    <article class="editor-card">
+
+      <div class="editor-avatar">
+        ${
           profile.avatar_url
-            ? '<img src="' +
-              safeUrl(profile.avatar_url) +
-              '" alt="" style="width:100%;height:100%;object-fit:cover">'
-            : escapeHtml(name.charAt(0).toUpperCase())
-        ) +
-      "</div>" +
-      '<div class="editor-info">' +
-        "<h3>" +
-        escapeHtml(name) +
-        "</h3>" +
-        "<p>" +
-        escapeHtml(speciality) +
-        "</p>" +
-        (
+            ? `
+              <img
+                src="${safeUrl(
+                  profile.avatar_url
+                )}"
+                alt=""
+                style="width:100%;height:100%;object-fit:cover"
+              >
+            `
+            : escapeHtml(
+                name
+                  .slice(0, 1)
+                  .toUpperCase()
+              )
+        }
+      </div>
+
+      <div class="editor-info">
+
+        <h3>
+          ${escapeHtml(name)}
+        </h3>
+
+        <p>
+          ${escapeHtml(
+            profile.speciality ||
+              "Editor"
+          )}
+        </p>
+
+        ${
           profile.bio
-            ? "<p class=\"small\">" +
-              escapeHtml(profile.bio) +
-              "</p>"
+            ? `
+              <p class="small">
+                ${escapeHtml(
+                  profile.bio
+                )}
+              </p>
+            `
             : ""
-        ) +
-      "</div>" +
-    "</article>"
-  );
+        }
+
+        ${
+          profile.contact_email
+            ? `
+              <a
+                class="button primary"
+                href="mailto:${escapeAttr(
+                  profile.contact_email
+                )}"
+              >
+                Contact Editor
+              </a>
+            `
+            : ""
+        }
+
+      </div>
+
+    </article>
+  `;
 }
 
 function workCard(post) {
   const editor =
-    post.profiles &&
-    post.profiles.display_name
-      ? post.profiles.display_name
-      : "Jbad Editor";
+    post.profiles?.display_name ||
+    "Jbad Editor";
 
-  let media;
+  const media =
+    post.media_type ===
+    "video"
+      ? `
+        <video
+          src="${safeUrl(
+            post.media_url
+          )}"
+          controls
+          preload="metadata"
+        ></video>
+      `
+      : `
+        <img
+          src="${safeUrl(
+            post.media_url
+          )}"
+          alt="${escapeAttr(
+            post.title
+          )}"
+          loading="lazy"
+        >
+      `;
 
-  if (post.media_type === "video") {
-    media =
-      '<video src="' +
-      safeUrl(post.media_url) +
-      '" controls preload="metadata"></video>';
-  } else {
-    media =
-      '<img src="' +
-      safeUrl(post.media_url) +
-      '" alt="' +
-      escapeAttr(post.title) +
-      '" loading="lazy">';
-  }
+  return `
+    <article class="work-card">
 
-  return (
-    '<article class="work-card">' +
-      '<div class="work-media">' +
-        media +
-      "</div>" +
-      '<div class="work-info">' +
-        "<h3>" +
-        escapeHtml(post.title) +
-        "</h3>" +
-        "<p>" +
-        escapeHtml(editor) +
-        "</p>" +
-        (
+      <div class="work-media">
+        ${media}
+      </div>
+
+      <div class="work-info">
+
+        <h3>
+          ${escapeHtml(
+            post.title
+          )}
+        </h3>
+
+        <p>
+          ${escapeHtml(
+            editor
+          )}
+        </p>
+
+        ${
           post.description
-            ? "<p class=\"small\">" +
-              escapeHtml(post.description) +
-              "</p>"
+            ? `
+              <p class="small">
+                ${escapeHtml(
+                  post.description
+                )}
+              </p>
+            `
             : ""
-        ) +
-      "</div>" +
-    "</article>"
-  );
+        }
+
+      </div>
+
+    </article>
+  `;
 }
 
 /* DASHBOARD */
 
 async function openDashboard() {
-  const sessionResult =
-    await supabase.auth.getSession();
+  if (!supabase) {
+    return;
+  }
 
-  const session = sessionResult.data.session;
+  const {
+    data: {
+      session
+    }
+  } =
+    await supabase.auth.getSession();
 
   if (!session) {
     setAuthMode("login");
@@ -404,404 +714,979 @@ async function openDashboard() {
     return;
   }
 
-  const profileResult = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", session.user.id)
-    .single();
+  const {
+    data: profile,
+    error: profileError
+  } =
+    await supabase
+      .from("profiles")
+      .select("*")
+      .eq(
+        "id",
+        session.user.id
+      )
+      .maybeSingle();
 
-  const profile = profileResult.data;
+  if (profileError) {
+    console.error(
+      "Profile error:",
+      profileError
+    );
+  }
 
-  const postsResult = await supabase
-    .from("editor_posts")
-    .select("*")
-    .eq("editor_id", session.user.id)
-    .order("created_at", {
-      ascending: false
-    });
-
-  const posts = postsResult.data || [];
+  const {
+    data: posts
+  } =
+    await supabase
+      .from("editor_posts")
+      .select("*")
+      .eq(
+        "editor_id",
+        session.user.id
+      )
+      .order(
+        "created_at",
+        {
+          ascending:
+            false
+        }
+      );
 
   $("dashboardContent").innerHTML =
-    '<form id="profileForm" class="dashboard-grid">' +
+    `
+    <form
+      id="profileForm"
+      class="dashboard-grid"
+    >
 
-      "<label>" +
-        "Display name" +
-        '<input id="dName" maxlength="80" required value="' +
-        escapeAttr(profile?.display_name || "") +
-        '">' +
-      "</label>" +
+      <label>
+        Display name
+        <input
+          id="dName"
+          value="${escapeAttr(
+            profile?.display_name ||
+              ""
+          )}"
+          maxlength="80"
+          required
+        >
+      </label>
 
-      "<label>" +
-        "Speciality" +
-        '<input id="dSpeciality" maxlength="120" value="' +
-        escapeAttr(profile?.speciality || "") +
-        '">' +
-      "</label>" +
+      <label>
+        Speciality
+        <input
+          id="dSpeciality"
+          value="${escapeAttr(
+            profile?.speciality ||
+              ""
+          )}"
+          maxlength="120"
+        >
+      </label>
 
-      '<label class="full-row">' +
-        "Bio" +
-        '<textarea id="dBio" maxlength="500">' +
-        escapeHtml(profile?.bio || "") +
-        "</textarea>" +
-      "</label>" +
+      <label>
+        Contact email
+        <input
+          id="dContactEmail"
+          type="email"
+          value="${escapeAttr(
+            profile?.contact_email ||
+              ""
+          )}"
+          maxlength="254"
+        >
+      </label>
 
-      "<label>" +
-        "Website / portfolio URL" +
-        '<input id="dWebsite" type="url" value="' +
-        escapeAttr(profile?.website_url || "") +
-        '">' +
-      "</label>" +
+      <label>
+        Website / portfolio URL
+        <input
+          id="dWebsite"
+          type="url"
+          value="${escapeAttr(
+            profile?.website_url ||
+              ""
+          )}"
+        >
+      </label>
 
-      "<label>" +
-        "Avatar URL" +
-        '<input id="dAvatar" type="url" value="' +
-        escapeAttr(profile?.avatar_url || "") +
-        '">' +
-      "</label>" +
+      <label class="full-row">
+        Bio
+        <textarea
+          id="dBio"
+          maxlength="500"
+        >${escapeHtml(
+          profile?.bio ||
+            ""
+        )}</textarea>
+      </label>
 
-      '<button class="button primary" type="submit">' +
-        "Save profile" +
-      "</button>" +
+      <label>
+        Avatar URL
+        <input
+          id="dAvatar"
+          type="url"
+          value="${escapeAttr(
+            profile?.avatar_url ||
+              ""
+          )}"
+        >
+      </label>
 
-      '<button class="button danger" type="button" id="logoutButton">' +
-        "Log out" +
-      "</button>" +
+      <button
+        class="button primary"
+        type="submit"
+      >
+        Save profile
+      </button>
 
-    "</form>" +
+      <button
+        class="button danger"
+        type="button"
+        id="logoutButton"
+      >
+        Log out
+      </button>
 
-    '<div id="stripePanel" style="margin-top:30px;padding:25px;border:1px solid #ddd;background:#fff">' +
-      '<p class="eyebrow">PAYMENTS</p>' +
-      "<h3>Stripe payments</h3>" +
-      '<p id="stripeStatus" class="muted">Checking Stripe connection...</p>' +
-      '<button class="button primary" type="button" id="stripeButton">' +
-        "Check Stripe" +
-      "</button>" +
-      '<p id="stripeMessage" class="form-message"></p>' +
-    "</div>" +
+    </form>
 
-    "<hr style=\"border:0;border-top:1px solid #ddd;margin:35px 0\">" +
+    <hr
+      style="
+        border:0;
+        border-top:1px solid #ddd;
+        margin:35px 0;
+      "
+    >
 
-    "<h3>Publish showcase work</h3>" +
+    <h3>
+      Payments
+    </h3>
 
-    '<form id="postForm" class="dashboard-grid">' +
+    <p class="muted">
+      Stripe securely handles your payment and payout details.
+    </p>
 
-      "<label>" +
-        "Title" +
-        '<input id="postTitle" maxlength="100" required>' +
-      "</label>" +
+    <div
+      style="
+        display:flex;
+        gap:12px;
+        align-items:center;
+        flex-wrap:wrap;
+        margin:18px 0;
+      "
+    >
 
-      "<label>" +
-        "Type" +
-        '<select id="postType">' +
-          '<option value="image">Image</option>' +
-          '<option value="video">Video</option>' +
-        "</select>" +
-      "</label>" +
+      <button
+        class="button primary"
+        type="button"
+        id="connectStripeButton"
+      >
+        ${
+          profile?.stripe_account_id
+            ? "Open Stripe"
+            : "Connect Stripe account"
+        }
+      </button>
 
-      '<label class="full-row">' +
-        "Description" +
-        '<textarea id="postDescription" maxlength="500"></textarea>' +
-      "</label>" +
+      <span
+        id="stripeStatus"
+        class="small"
+      >
+        Checking Stripe...
+      </span>
 
-      '<label class="full-row">' +
-        "Media file" +
-        '<input id="postFile" type="file" required accept="image/*,video/*">' +
-      "</label>" +
+    </div>
 
-      '<button class="button primary" type="submit">' +
-        "Publish work" +
-      "</button>" +
+    <p
+      id="stripeMessage"
+      class="form-message"
+    ></p>
 
-    "</form>" +
+    <div
+      id="balancePanel"
+      style="
+        margin-top:25px;
+        padding:25px;
+        border:1px solid #ddd;
+        border-radius:12px;
+        background:#fff;
+      "
+    >
 
-    '<p id="postMessage" class="form-message"></p>' +
+      <p class="eyebrow">
+        ACCOUNT BALANCE
+      </p>
 
-    "<h3>Your posts</h3>" +
+      <h2
+        id="availableBalance"
+        style="margin:5px 0 8px;"
+      >
+        Loading...
+      </h2>
 
-    '<div class="post-list">' +
-      (
-        posts.length
-          ? posts.map(function (post) {
-              return (
-                '<div class="post-row">' +
-                  "<div>" +
-                    "<b>" +
-                    escapeHtml(post.title) +
-                    "</b>" +
-                    '<div class="small">' +
-                    escapeHtml(post.media_type) +
-                    "</div>" +
-                  "</div>" +
-                  '<button class="button danger delete-post" data-id="' +
-                  escapeAttr(post.id) +
-                  '" data-url="' +
-                  escapeAttr(post.media_url) +
-                  '">' +
-                  "Delete" +
-                  "</button>" +
-                "</div>"
-              );
-            }).join("")
-          : '<p class="muted">You have not published anything yet.</p>'
-      ) +
-    "</div>";
+      <p
+        id="pendingBalance"
+        class="muted"
+      >
+        Pending: Loading...
+      </p>
+
+      <p
+        class="small"
+        style="margin-top:15px;"
+      >
+        Your balance is provided by Stripe. Pending funds may take time to become available for payout.
+      </p>
+
+      <button
+        class="button secondary"
+        type="button"
+        id="refreshBalanceButton"
+        style="margin-top:10px;"
+      >
+        Refresh balance
+      </button>
+
+    </div>
+
+    <hr
+      style="
+        border:0;
+        border-top:1px solid #ddd;
+        margin:35px 0;
+      "
+    >
+
+    <h3>
+      Publish showcase work
+    </h3>
+
+    <form
+      id="postForm"
+      class="dashboard-grid"
+    >
+
+      <label>
+        Title
+        <input
+          id="postTitle"
+          maxlength="100"
+          required
+        >
+      </label>
+
+      <label>
+        Type
+
+        <select
+          id="postType"
+        >
+          <option value="image">
+            Image
+          </option>
+
+          <option value="video">
+            Video
+          </option>
+        </select>
+
+      </label>
+
+      <label class="full-row">
+        Description
+
+        <textarea
+          id="postDescription"
+          maxlength="500"
+        ></textarea>
+      </label>
+
+      <label class="full-row">
+        Media file
+
+        <input
+          id="postFile"
+          type="file"
+          accept="image/*,video/*"
+          required
+        >
+      </label>
+
+      <button
+        class="button primary"
+        type="submit"
+      >
+        Publish work
+      </button>
+
+    </form>
+
+    <p
+      id="postMessage"
+      class="form-message"
+    ></p>
+
+    <h3>
+      Your posts
+    </h3>
+
+    <div class="post-list">
+
+      ${
+        posts?.length
+          ? posts
+              .map(
+                (post) => `
+                  <div class="post-row">
+
+                    <div>
+
+                      <b>
+                        ${escapeHtml(
+                          post.title
+                        )}
+                      </b>
+
+                      <div class="small">
+                        ${escapeHtml(
+                          post.media_type
+                        )}
+                      </div>
+
+                    </div>
+
+                    <button
+                      class="button danger delete-post"
+                      data-id="${escapeAttr(
+                        post.id
+                      )}"
+                      data-url="${escapeAttr(
+                        post.media_url
+                      )}"
+                    >
+                      Delete
+                    </button>
+
+                  </div>
+                `
+              )
+              .join("")
+          : `
+            <p class="muted">
+              You haven't published anything yet.
+            </p>
+          `
+      }
+
+    </div>
+  `;
 
   showModal(dashboardModal);
 
-  $("profileForm").onsubmit = async function (event) {
-    event.preventDefault();
+  $("profileForm").onsubmit =
+    async (event) => {
+      event.preventDefault();
 
-    const result = await supabase
-      .from("profiles")
-      .update({
-        display_name: $("dName").value.trim(),
-        speciality: $("dSpeciality").value.trim(),
-        bio: $("dBio").value.trim(),
-        website_url: $("dWebsite").value.trim() || null,
-        avatar_url: $("dAvatar").value.trim() || null,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", session.user.id);
-
-    alert(
-      result.error
-        ? result.error.message
-        : "Profile saved."
-    );
-
-    if (!result.error) {
-      await loadPublicContent();
-    }
-  };
-
-  $("logoutButton").onclick = async function () {
-    await supabase.auth.signOut();
-    hideModal(dashboardModal);
-    await refreshAuthButton();
-  };
-
-  $("stripeButton").onclick =
-    checkStripeConnection;
-
-  await checkStripeConnection();
-
-  $("postForm").onsubmit = async function (event) {
-    event.preventDefault();
-
-    const file = $("postFile").files[0];
-    const message = $("postMessage");
-
-    if (!file) {
-      message.textContent = "Choose a file.";
-      return;
-    }
-
-    if (file.size > 50 * 1024 * 1024) {
-      message.textContent =
-        "That file is over the 50 MB limit.";
-      return;
-    }
-
-    message.textContent = "Uploading...";
-
-    const fileName = file.name
-      .toLowerCase()
-      .replace(/[^a-z0-9._-]+/g, "-");
-
-    const path =
-      session.user.id +
-      "/" +
-      crypto.randomUUID() +
-      "-" +
-      fileName;
-
-    const uploadResult =
-      await supabase.storage
-        .from("portfolio")
-        .upload(path, file, {
-          upsert: false,
-          contentType: file.type
-        });
-
-    if (uploadResult.error) {
-      message.textContent =
-        uploadResult.error.message;
-      return;
-    }
-
-    const publicUrlResult =
-      supabase.storage
-        .from("portfolio")
-        .getPublicUrl(path);
-
-    const insertResult =
-      await supabase
-        .from("editor_posts")
-        .insert({
-          editor_id: session.user.id,
-          title: $("postTitle").value.trim(),
-          description: $("postDescription").value.trim(),
-          media_url: publicUrlResult.data.publicUrl,
-          media_type: $("postType").value
-        });
-
-    if (insertResult.error) {
-      await supabase.storage
-        .from("portfolio")
-        .remove([path]);
-
-      message.textContent =
-        insertResult.error.message;
-      return;
-    }
-
-    message.textContent = "Published!";
-
-    await openDashboard();
-    await loadPublicContent();
-  };
-
-  document
-    .querySelectorAll(".delete-post")
-    .forEach(function (button) {
-      button.onclick = async function () {
-        if (!confirm("Delete this post?")) {
-          return;
-        }
-
-        const url = button.dataset.url;
-
-        const marker =
-          "/storage/v1/object/public/portfolio/";
-
-        if (url && url.includes(marker)) {
-          const path =
-            decodeURIComponent(
-              url.split(marker)[1]
-            );
-
-          await supabase.storage
-            .from("portfolio")
-            .remove([path]);
-        }
-
+      const {
+        error
+      } =
         await supabase
-          .from("editor_posts")
-          .delete()
-          .eq("id", button.dataset.id);
+          .from("profiles")
+          .update({
+            display_name:
+              $("dName")
+                .value
+                .trim(),
 
-        await openDashboard();
-        await loadPublicContent();
-      };
-    });
-}
+            speciality:
+              $("dSpeciality")
+                .value
+                .trim(),
 
-/* STRIPE */
+            contact_email:
+              $("dContactEmail")
+                .value
+                .trim() ||
+              null,
 
-async function checkStripeConnection() {
-  const status = $("stripeStatus");
-  const button = $("stripeButton");
-  const message = $("stripeMessage");
+            bio:
+              $("dBio")
+                .value
+                .trim(),
 
-  if (!status || !button) {
-    return;
-  }
+            website_url:
+              $("dWebsite")
+                .value
+                .trim() ||
+              null,
 
-  status.textContent =
-    "Checking Stripe connection...";
+            avatar_url:
+              $("dAvatar")
+                .value
+                .trim() ||
+              null,
 
-  message.textContent = "";
+            updated_at:
+              new Date()
+                .toISOString()
+          })
+          .eq(
+            "id",
+            session.user.id
+          );
 
-  button.disabled = true;
-  button.textContent = "Checking Stripe...";
-
-  const result =
-    await supabase.functions.invoke(
-      "stripe-connect",
-      {
-        body: {}
+      if (error) {
+        alert(
+          error.message
+        );
+        return;
       }
-    );
 
-  if (result.error) {
-    status.textContent =
-      "Unable to connect to Stripe.";
+      alert(
+        "Profile saved."
+      );
 
-    message.textContent =
-      result.error.message;
-
-    button.disabled = false;
-    button.textContent = "Try again";
-    return;
-  }
-
-  const data = result.data || {};
-
-  if (
-    data.connected === true ||
-    (
-      data.chargesEnabled === true &&
-      data.payoutsEnabled === true
-    )
-  ) {
-    status.textContent =
-      "Stripe is connected and ready.";
-
-    button.textContent =
-      "Stripe connected";
-
-    button.disabled = true;
-    return;
-  }
-
-  if (data.url) {
-    status.textContent =
-      "Your Stripe account needs setup.";
-
-    button.textContent =
-      "Finish Stripe setup";
-
-    button.disabled = false;
-
-    button.onclick = function () {
-      window.location.href = data.url;
+      await loadPublicContent();
     };
 
+  $("logoutButton").onclick =
+    async () => {
+      await supabase.auth.signOut();
+
+      hideModal(
+        dashboardModal
+      );
+
+      await refreshAuthButton();
+    };
+
+  $("connectStripeButton").onclick =
+    connectStripe;
+
+  $("refreshBalanceButton").onclick =
+    refreshStripeBalance;
+
+  await refreshStripeBalance();
+
+  $("postForm").onsubmit =
+    async (event) => {
+      event.preventDefault();
+
+      const file =
+        $("postFile").files[0];
+
+      const message =
+        $("postMessage");
+
+      if (!file) {
+        message.textContent =
+          "Choose a file.";
+        return;
+      }
+
+      if (
+        file.size >
+        50 *
+        1024 *
+        1024
+      ) {
+        message.textContent =
+          "That file is over the 50 MB limit.";
+        return;
+      }
+
+      message.textContent =
+        "Uploading...";
+
+      const type =
+        $("postType").value;
+
+      if (
+        type === "image" &&
+        !file.type.startsWith(
+          "image/"
+        )
+      ) {
+        message.textContent =
+          "Choose an image file.";
+        return;
+      }
+
+      if (
+        type === "video" &&
+        !file.type.startsWith(
+          "video/"
+        )
+      ) {
+        message.textContent =
+          "Choose a video file.";
+        return;
+      }
+
+      const safeName =
+        file.name
+          .toLowerCase()
+          .replace(
+            /[^a-z0-9._-]+/g,
+            "-"
+          );
+
+      const path =
+        session.user.id +
+        "/" +
+        crypto.randomUUID() +
+        "-" +
+        safeName;
+
+      const {
+        error:
+          uploadError
+      } =
+        await supabase.storage
+          .from("portfolio")
+          .upload(
+            path,
+            file,
+            {
+              upsert:
+                false,
+              contentType:
+                file.type
+            }
+          );
+
+      if (uploadError) {
+        message.textContent =
+          uploadError.message;
+        return;
+      }
+
+      const {
+        data:
+          publicData
+      } =
+        supabase.storage
+          .from(
+            "portfolio"
+          )
+          .getPublicUrl(
+            path
+          );
+
+      const {
+        error:
+          insertError
+      } =
+        await supabase
+          .from(
+            "editor_posts"
+          )
+          .insert({
+            editor_id:
+              session.user.id,
+
+            title:
+              $("postTitle")
+                .value
+                .trim(),
+
+            description:
+              $("postDescription")
+                .value
+                .trim(),
+
+            media_url:
+              publicData.publicUrl,
+
+            media_type:
+              type
+          });
+
+      if (insertError) {
+        await supabase.storage
+          .from(
+            "portfolio"
+          )
+          .remove([
+            path
+          ]);
+
+        message.textContent =
+          insertError.message;
+
+        return;
+      }
+
+      message.textContent =
+        "Published!";
+
+      await openDashboard();
+
+      await loadPublicContent();
+    };
+
+  document
+    .querySelectorAll(
+      ".delete-post"
+    )
+    .forEach(
+      (button) => {
+        button.onclick =
+          async () => {
+            if (
+              !confirm(
+                "Delete this post?"
+              )
+            ) {
+              return;
+            }
+
+            const url =
+              button.dataset
+                .url;
+
+            const marker =
+              "/storage/v1/object/public/portfolio/";
+
+            if (
+              url &&
+              url.includes(
+                marker
+              )
+            ) {
+              const path =
+                decodeURIComponent(
+                  url.split(
+                    marker
+                  )[1]
+                );
+
+              await supabase.storage
+                .from(
+                  "portfolio"
+                )
+                .remove([
+                  path
+                ]);
+            }
+
+            const {
+              error
+            } =
+              await supabase
+                .from(
+                  "editor_posts"
+                )
+                .delete()
+                .eq(
+                  "id",
+                  button.dataset.id
+                );
+
+            if (error) {
+              alert(
+                error.message
+              );
+              return;
+            }
+
+            await openDashboard();
+
+            await loadPublicContent();
+          };
+      }
+    );
+}
+
+/* STRIPE CONNECTION */
+
+async function connectStripe() {
+  if (!supabase) {
     return;
   }
 
-  status.textContent =
-    data.message ||
-    "Stripe setup is still being processed.";
+  const {
+    data: {
+      session
+    }
+  } =
+    await supabase.auth.getSession();
 
-  button.disabled = false;
-  button.textContent = "Check Stripe again";
+  if (!session) {
+    setAuthMode("login");
+    showModal(authModal);
+    return;
+  }
 
-  button.onclick =
-    checkStripeConnection;
+  const button =
+    $("connectStripeButton");
+
+  const message =
+    $("stripeMessage");
+
+  button.disabled = true;
+
+  button.textContent =
+    "Opening Stripe...";
+
+  message.textContent =
+    "";
+
+  try {
+    const {
+      data,
+      error
+    } =
+      await supabase.functions.invoke(
+        "stripe-connect",
+        {
+          body: {}
+        }
+      );
+
+    if (error) {
+      throw new Error(
+        error.message
+      );
+    }
+
+    if (
+      data?.connected
+    ) {
+      $("stripeStatus").textContent =
+        "Stripe is connected and ready.";
+
+      button.textContent =
+        "Stripe connected";
+
+      button.disabled =
+        false;
+
+      await refreshStripeBalance();
+
+      return;
+    }
+
+    if (data?.url) {
+      window.location.href =
+        data.url;
+
+      return;
+    }
+
+    throw new Error(
+      "Stripe did not return an onboarding link."
+    );
+  } catch (error) {
+    console.error(
+      "Stripe connection error:",
+      error
+    );
+
+    message.textContent =
+      error.message ||
+      "Something went wrong.";
+
+    button.disabled =
+      false;
+
+    button.textContent =
+      "Connect Stripe account";
+  }
+}
+
+/* STRIPE BALANCE */
+
+async function refreshStripeBalance() {
+  const available =
+    $("availableBalance");
+
+  const pending =
+    $("pendingBalance");
+
+  const status =
+    $("stripeStatus");
+
+  if (
+    !available ||
+    !pending
+  ) {
+    return;
+  }
+
+  available.textContent =
+    "Loading...";
+
+  pending.textContent =
+    "Pending: Loading...";
+
+  try {
+    const {
+      data,
+      error
+    } =
+      await supabase.functions.invoke(
+        "stripe-connect",
+        {
+          body: {}
+        }
+      );
+
+    if (error) {
+      throw new Error(
+        error.message
+      );
+    }
+
+    if (!data) {
+      throw new Error(
+        "No balance information was returned."
+      );
+    }
+
+    if (
+      data.connected
+    ) {
+      status.textContent =
+        "Stripe is connected and ready.";
+    } else {
+      status.textContent =
+        "Stripe setup is not complete yet.";
+    }
+
+    const balance =
+      data.balance;
+
+    if (!balance) {
+      available.textContent =
+        "£0.00";
+
+      pending.textContent =
+        "Pending: £0.00";
+
+      return;
+    }
+
+    const availableText =
+      formatBalance(
+        balance.available
+      );
+
+    const pendingText =
+      formatBalance(
+        balance.pending
+      );
+
+    available.textContent =
+      availableText;
+
+    pending.textContent =
+      "Pending: " +
+      pendingText;
+  } catch (error) {
+    console.error(
+      "Balance error:",
+      error
+    );
+
+    available.textContent =
+      "Unable to load";
+
+    pending.textContent =
+      "Pending: unavailable";
+  }
+}
+
+function formatBalance(
+  entries
+) {
+  if (
+    !entries ||
+    !entries.length
+  ) {
+    return "£0.00";
+  }
+
+  return entries
+    .map(
+      (entry) => {
+        const amount =
+          Number(
+            entry.amount || 0
+          ) / 100;
+
+        const currency =
+          String(
+            entry.currency ||
+              "gbp"
+          ).toUpperCase();
+
+        try {
+          return new Intl.NumberFormat(
+            "en-GB",
+            {
+              style:
+                "currency",
+              currency:
+                currency
+            }
+          ).format(
+            amount
+          );
+        } catch {
+          return (
+            currency +
+            " " +
+            amount.toFixed(2)
+          );
+        }
+      }
+    )
+    .join(" + ");
 }
 
 /* MOBILE MENU */
 
-$("menuButton").onclick = function () {
-  const nav = document.querySelector("nav");
+$("menuButton").onclick =
+  () => {
+    const nav =
+      document.querySelector(
+        "nav"
+      );
 
-  if (nav.style.display === "flex") {
-    nav.style.display = "";
-    return;
-  }
+    if (!nav) {
+      return;
+    }
 
-  nav.style.display = "flex";
-  nav.style.position = "absolute";
-  nav.style.top = "76px";
-  nav.style.left = "0";
-  nav.style.right = "0";
-  nav.style.padding = "20px";
-  nav.style.flexDirection = "column";
-};
+    nav.style.display =
+      nav.style.display ===
+      "flex"
+        ? ""
+        : "flex";
+
+    nav.style.position =
+      "absolute";
+
+    nav.style.top =
+      "76px";
+
+    nav.style.left =
+      "0";
+
+    nav.style.right =
+      "0";
+
+    nav.style.padding =
+      "20px";
+
+    nav.style.background =
+      "#f5f5f2";
+
+    nav.style.flexDirection =
+      "column";
+  };
 
 /* START */
 
 loadPublicContent();
+
 refreshAuthButton();
