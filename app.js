@@ -42,6 +42,7 @@ function setAuthMode(mode){
   $("toggleAuthMode").textContent = mode === "login"
     ? "Need an account? Sign up"
     : "Already have an account? Log in";
+  $("forgotPassword").classList.toggle("hidden", mode !== "login");
   $("authMessage").textContent = "";
 }
 $("toggleAuthMode").onclick = () => setAuthMode(authMode === "login" ? "signup" : "login");
