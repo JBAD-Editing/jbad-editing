@@ -1,187 +1,704 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Jbad Editing — modern video and photo editing services, plus a community for editors." />
+
+<meta
+ name="description"
+ content="Jbad Editing — modern video and photo editing services, plus a community for editors."
+/>
+
   <title>Jbad Editing — Video & Photo Editing Agency</title>
+
   <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
+
   <header class="site-header">
-    <a class="brand" href="#home">JBAD<span>EDITING</span></a>
 
-    <nav>
-      <a href="#home">Home</a>
-      <a href="#services">Services</a>
-      <a href="#portfolio">Portfolio</a>
-      <a href="#pricing">Pricing</a>
-      <a href="#editors">Editors</a>
-      <button id="authButton" class="nav-button">Editor login</button>
-    </nav>
+```
+<a class="brand" href="#home">
+  JBAD<span>EDITING</span>
+</a>
 
-    <button id="menuButton" class="menu-button" aria-label="Open menu">☰</button>
+<nav>
+  <a href="#home">Home</a>
+  <a href="#services">Services</a>
+  <a href="#portfolio">Portfolio</a>
+  <a href="#pricing">Pricing</a>
+  <a href="#payments">Payments</a>
+  <a href="#editors">Editors</a>
+
+  <button
+    id="authButton"
+    class="nav-button"
+  >
+    Editor login
+  </button>
+</nav>
+
+<button
+  id="menuButton"
+  class="menu-button"
+  aria-label="Open menu"
+>
+  ☰
+</button>
+```
+
   </header>
 
   <main>
-    <section id="home" class="hero">
-      <div class="hero-copy">
-        <p class="eyebrow">VIDEO • PHOTO • CREATIVE</p>
 
-        <h1>
-          Make your content<br />
-          <span>stand out.</span>
-        </h1>
+```
+<!-- =====================================================
+     HOME
+     ===================================================== -->
 
-        <p class="hero-text">
-          Jbad Editing provides clean, modern video and photo editing for creators, brands, athletes and businesses.
-        </p>
+<section
+  id="home"
+  class="hero"
+>
 
-        <div class="hero-actions">
-          <a class="button primary" href="#contact">Start a project</a>
-          <a class="button secondary" href="#portfolio">View work</a>
-        </div>
-      </div>
+  <div class="hero-copy">
 
-      <div class="hero-card">
-        <div class="hero-card-inner">
-          <span>JBAD</span>
-          <small>EDITING AGENCY</small>
-        </div>
-      </div>
-    </section>
+    <p class="eyebrow">
+      VIDEO • PHOTO • CREATIVE
+    </p>
 
-    <section id="services" class="section">
-      <div class="section-heading">
-        <p class="eyebrow">WHAT WE DO</p>
-        <h2>Everything you need<br />to publish better content.</h2>
-      </div>
+    <h1>
+      Make your content<br />
+      <span>stand out.</span>
+    </h1>
 
-      <div class="cards">
-        <article class="card">
-          <span class="card-number">01</span>
-          <h3>Video editing</h3>
-          <p>YouTube, TikTok, Reels, short-form, long-form, cinematic edits and social content.</p>
-        </article>
+    <p class="hero-text">
+      Jbad Editing provides clean, modern video and photo
+      editing for creators, brands, athletes and businesses.
+    </p>
 
-        <article class="card">
-          <span class="card-number">02</span>
-          <h3>Photo editing</h3>
-          <p>Professional retouching, colour correction, composites, social graphics and image clean-up.</p>
-        </article>
-
-        <article class="card">
-          <span class="card-number">03</span>
-          <h3>Thumbnails</h3>
-          <p>Scroll-stopping YouTube thumbnails and social artwork designed around your content.</p>
-        </article>
-
-        <article class="card">
-          <span class="card-number">04</span>
-          <h3>Creator content</h3>
-          <p>Fast, platform-ready edits for TikTok, Instagram, YouTube and other social channels.</p>
-        </article>
-      </div>
-    </section>
-
-    <section id="portfolio" class="section alt">
-      <div class="section-heading row">
-        <div>
-          <p class="eyebrow">OUR WORK</p>
-          <h2>Selected work.</h2>
-        </div>
-
-        <span class="live-label">LIVE PORTFOLIO</span>
-      </div>
-
-      <div id="featuredGrid" class="work-grid">
-        <div class="empty-state">
-          Connect Supabase and editor posts will appear here.
-        </div>
-      </div>
-    </section>
-
-    <section id="pricing" class="section">
-      <div class="section-heading">
-        <p class="eyebrow">SIMPLE PACKAGES</p>
-        <h2>Choose a starting point.</h2>
-      </div>
-
-      <div class="pricing-grid">
-        <article class="price-card">
-          <p class="eyebrow">STARTER</p>
-          <h3>From £15</h3>
-          <p>Short-form edits, simple photo work or thumbnails.</p>
-          <a href="#contact">Request a quote →</a>
-        </article>
-
-        <article class="price-card featured">
-          <p class="eyebrow">CREATOR</p>
-          <h3>From £40</h3>
-          <p>Higher-detail video edits, social packages and creator content.</p>
-          <a href="#contact">Request a quote →</a>
-        </article>
-
-        <article class="price-card">
-          <p class="eyebrow">CUSTOM</p>
-          <h3>Let's talk</h3>
-          <p>Large projects, recurring work, businesses and custom requirements.</p>
-          <a href="#contact">Get in touch →</a>
-        </article>
-      </div>
-
-      <p class="pricing-note">
-        Prices are starting points. Final pricing depends on length, complexity and turnaround.
-      </p>
-    </section>
-
-    <section id="editors" class="section dark-section">
-      <div class="section-heading row">
-        <div>
-          <p class="eyebrow">EDITOR COMMUNITY</p>
-          <h2>Find editors. Share your work.</h2>
-        </div>
-
-        <button class="button primary" id="joinButton">
-          Join as an editor
-        </button>
-      </div>
-
-      <p class="section-intro">
-        Editors can create a public profile and showcase their work.
-        Visitors can browse the community and discover new talent.
-      </p>
-
-      <div id="editorsGrid" class="editors-grid">
-        <div class="empty-state">Loading editors…</div>
-      </div>
-    </section>
-
-    <section id="contact" class="section contact-section">
-      <div>
-        <p class="eyebrow">START A PROJECT</p>
-        <h2>Have something<br />worth editing?</h2>
-        <p>
-          Tell us what you need and we'll point you in the right direction.
-        </p>
-      </div>
+    <div class="hero-actions">
 
       <a
-        class="contact-email"
-        href="mailto:fusionbtw1@gmail.com"
+        class="button primary"
+        href="#payments"
       >
-        fusionbtw1@gmail.com
+        Make a payment
       </a>
-    </section>
+
+      <a
+        class="button secondary"
+        href="#portfolio"
+      >
+        View work
+      </a>
+
+    </div>
+
+  </div>
+
+
+  <div class="hero-card">
+
+    <div class="hero-card-inner">
+
+      <span>JBAD</span>
+
+      <small>
+        EDITING AGENCY
+      </small>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     SERVICES
+     ===================================================== -->
+
+<section
+  id="services"
+  class="section"
+>
+
+  <div class="section-heading">
+
+    <p class="eyebrow">
+      WHAT WE DO
+    </p>
+
+    <h2>
+      Everything you need<br />
+      to publish better content.
+    </h2>
+
+  </div>
+
+
+  <div class="cards">
+
+    <article class="card">
+
+      <span class="card-number">
+        01
+      </span>
+
+      <h3>
+        Video editing
+      </h3>
+
+      <p>
+        YouTube, TikTok, Reels, short-form,
+        long-form, cinematic edits and social content.
+      </p>
+
+    </article>
+
+
+    <article class="card">
+
+      <span class="card-number">
+        02
+      </span>
+
+      <h3>
+        Photo editing
+      </h3>
+
+      <p>
+        Professional retouching, colour correction,
+        composites, social graphics and image clean-up.
+      </p>
+
+    </article>
+
+
+    <article class="card">
+
+      <span class="card-number">
+        03
+      </span>
+
+      <h3>
+        Thumbnails
+      </h3>
+
+      <p>
+        Scroll-stopping YouTube thumbnails and
+        social artwork designed around your content.
+      </p>
+
+    </article>
+
+
+    <article class="card">
+
+      <span class="card-number">
+        04
+      </span>
+
+      <h3>
+        Creator content
+      </h3>
+
+      <p>
+        Fast, platform-ready edits for TikTok,
+        Instagram, YouTube and other social channels.
+      </p>
+
+    </article>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     PORTFOLIO
+     ===================================================== -->
+
+<section
+  id="portfolio"
+  class="section alt"
+>
+
+  <div class="section-heading row">
+
+    <div>
+
+      <p class="eyebrow">
+        OUR WORK
+      </p>
+
+      <h2>
+        Selected work.
+      </h2>
+
+    </div>
+
+    <span class="live-label">
+      LIVE PORTFOLIO
+    </span>
+
+  </div>
+
+
+  <div
+    id="featuredGrid"
+    class="work-grid"
+  >
+
+    <div class="empty-state">
+      Connect Supabase and editor posts will appear here.
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     PRICING
+     ===================================================== -->
+
+<section
+  id="pricing"
+  class="section"
+>
+
+  <div class="section-heading">
+
+    <p class="eyebrow">
+      SIMPLE PACKAGES
+    </p>
+
+    <h2>
+      Choose a starting point.
+    </h2>
+
+  </div>
+
+
+  <div class="pricing-grid">
+
+    <article class="price-card">
+
+      <p class="eyebrow">
+        STARTER
+      </p>
+
+      <h3>
+        From £15
+      </h3>
+
+      <p>
+        Short-form edits, simple photo work
+        or thumbnails.
+      </p>
+
+      <a href="#payments">
+        Pay for a project →
+      </a>
+
+    </article>
+
+
+    <article class="price-card featured">
+
+      <p class="eyebrow">
+        CREATOR
+      </p>
+
+      <h3>
+        From £40
+      </h3>
+
+      <p>
+        Higher-detail video edits, social packages
+        and creator content.
+      </p>
+
+      <a href="#payments">
+        Pay for a project →
+      </a>
+
+    </article>
+
+
+    <article class="price-card">
+
+      <p class="eyebrow">
+        CUSTOM
+      </p>
+
+      <h3>
+        Let's talk
+      </h3>
+
+      <p>
+        Large projects, recurring work, businesses
+        and custom requirements.
+      </p>
+
+      <a href="#contact">
+        Get in touch →
+      </a>
+
+    </article>
+
+  </div>
+
+
+  <p class="pricing-note">
+    Prices are starting points. Final pricing depends
+    on length, complexity and turnaround.
+  </p>
+
+</section>
+
+
+<!-- =====================================================
+     PAYMENTS
+     ===================================================== -->
+
+<section
+  id="payments"
+  class="section"
+>
+
+  <div class="section-heading">
+
+    <p class="eyebrow">
+      SECURE PAYMENT
+    </p>
+
+    <h2>
+      Pay Jbad Editing.
+    </h2>
+
+    <p class="section-intro">
+      Add funds for your project or make a payment
+      directly to Jbad Editing using Stripe.
+    </p>
+
+  </div>
+
+
+  <div
+    class="payment-card"
+    style="
+      max-width:600px;
+      margin:0 auto;
+      padding:30px;
+      background:#fff;
+      border:1px solid #ddd;
+      border-radius:14px;
+    "
+  >
+
+    <form id="paymentForm">
+
+      <label>
+        Amount
+
+        <div
+          style="
+            display:flex;
+            align-items:center;
+            gap:8px;
+            margin-top:8px;
+          "
+        >
+
+          <span
+            style="
+              font-size:20px;
+              font-weight:700;
+            "
+          >
+            £
+          </span>
+
+          <input
+            id="paymentAmount"
+            type="number"
+            min="1"
+            max="10000"
+            step="0.01"
+            placeholder="100.00"
+            required
+            style="flex:1;"
+          />
+
+        </div>
+
+      </label>
+
+
+      <label>
+        Payment description
+
+        <input
+          id="paymentDescription"
+          type="text"
+          maxlength="120"
+          placeholder="e.g. Video editing project"
+          required
+        />
+
+      </label>
+
+
+      <label>
+        Your email
+
+        <input
+          id="paymentEmail"
+          type="email"
+          maxlength="254"
+          placeholder="you@example.com"
+          required
+        />
+
+      </label>
+
+
+      <!-- =================================================
+           PRICE BREAKDOWN
+           ================================================= -->
+
+      <div
+        id="paymentBreakdown"
+        style="
+          margin:25px 0;
+          padding:20px;
+          background:#f5f5f2;
+          border-radius:10px;
+        "
+      >
+
+        <div
+          style="
+            display:flex;
+            justify-content:space-between;
+            margin-bottom:10px;
+          "
+        >
+
+          <span>
+            Amount
+          </span>
+
+          <strong id="paymentBase">
+            £0.00
+          </strong>
+
+        </div>
+
+
+        <div
+          style="
+            display:flex;
+            justify-content:space-between;
+            margin-bottom:12px;
+          "
+        >
+
+          <span>
+            Jbad Editing fee (3.5%)
+          </span>
+
+          <strong id="paymentFee">
+            £0.00
+          </strong>
+
+        </div>
+
+
+        <div
+          style="
+            border-top:1px solid #ccc;
+            padding-top:12px;
+            display:flex;
+            justify-content:space-between;
+            font-size:18px;
+          "
+        >
+
+          <strong>
+            Total
+          </strong>
+
+          <strong id="paymentTotal">
+            £0.00
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <p
+        style="
+          font-size:13px;
+          line-height:1.5;
+          margin-bottom:20px;
+        "
+      >
+        The 3.5% Jbad Editing fee is shown before
+        payment. Your payment is processed securely
+        by Stripe and is paid directly to Jbad Editing.
+      </p>
+
+
+      <button
+        id="paymentButton"
+        class="button primary full"
+        type="submit"
+      >
+        Continue to secure payment
+      </button>
+
+
+      <p
+        id="paymentMessage"
+        class="form-message"
+      ></p>
+
+    </form>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     EDITORS
+     ===================================================== -->
+
+<section
+  id="editors"
+  class="section dark-section"
+>
+
+  <div class="section-heading row">
+
+    <div>
+
+      <p class="eyebrow">
+        EDITOR COMMUNITY
+      </p>
+
+      <h2>
+        Find editors. Share your work.
+      </h2>
+
+    </div>
+
+
+    <button
+      class="button primary"
+      id="joinButton"
+    >
+      Join as an editor
+    </button>
+
+  </div>
+
+
+  <p class="section-intro">
+
+    Editors can create a public profile and
+    showcase their work. Visitors can browse
+    the community and discover new talent.
+
+  </p>
+
+
+  <div
+    id="editorsGrid"
+    class="editors-grid"
+  >
+
+    <div class="empty-state">
+      Loading editors…
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     CONTACT
+     ===================================================== -->
+
+<section
+  id="contact"
+  class="section contact-section"
+>
+
+  <div>
+
+    <p class="eyebrow">
+      START A PROJECT
+    </p>
+
+    <h2>
+      Have something<br />
+      worth editing?
+    </h2>
+
+    <p>
+      Tell us what you need and we'll point
+      you in the right direction.
+    </p>
+
+  </div>
+
+
+  <a
+    class="contact-email"
+    href="mailto:fusionbtw1@gmail.com"
+  >
+    fusionbtw1@gmail.com
+  </a>
+
+</section>
+```
+
   </main>
 
+  <!-- =======================================================
+       FOOTER
+       ======================================================= -->
+
   <footer>
-    <div class="brand">JBAD<span>EDITING</span></div>
-    <p>Video & Photo Editing Agency</p>
-    <p>© 2026 Jbad Editing</p>
+
+```
+<div class="brand">
+  JBAD<span>EDITING</span>
+</div>
+
+<p>
+  Video & Photo Editing Agency
+</p>
+
+<p>
+  © 2026 Jbad Editing
+</p>
+```
+
   </footer>
 
-  <!-- AUTH MODAL -->
+  <!-- =======================================================
+       AUTH MODAL
+       ======================================================= -->
 
   <div
     id="authModal"
@@ -190,102 +707,152 @@
     aria-modal="true"
     aria-labelledby="authTitle"
   >
-    <div class="modal-card">
-      <button class="close-button" id="closeAuth">×</button>
 
-      <p class="eyebrow">EDITOR AREA</p>
+```
+<div class="modal-card">
 
-      <h2 id="authTitle">Join Jbad Editing</h2>
+  <button
+    class="close-button"
+    id="closeAuth"
+  >
+    ×
+  </button>
 
-      <p id="authHint" class="muted">
-        Create an editor account to publish your profile and showcase your work.
-      </p>
 
-      <form id="authForm">
-        <label>
-          Email
-          <input
-            id="email"
-            type="email"
-            required
-            autocomplete="email"
-          />
-        </label>
+  <p class="eyebrow">
+    EDITOR AREA
+  </p>
 
-        <label>
-          Password
-          <input
-            id="password"
-            type="password"
-            required
-            minlength="6"
-            autocomplete="current-password"
-          />
-        </label>
 
-        <div id="profileFields">
-          <label>
-            Display name
-            <input
-              id="displayName"
-              type="text"
-              maxlength="80"
-              placeholder="e.g. Alex Smith"
-            />
-          </label>
+  <h2 id="authTitle">
+    Join Jbad Editing
+  </h2>
 
-          <label>
-            Speciality
-            <input
-              id="speciality"
-              type="text"
-              maxlength="120"
-              placeholder="Video editor • Photo editor • Thumbnails"
-            />
-          </label>
 
-          <label>
-            Contact email
-            <input
-              id="contactEmail"
-              type="email"
-              maxlength="254"
-              placeholder="The email clients should use to contact you"
-              autocomplete="email"
-            />
-          </label>
-        </div>
+  <p
+    id="authHint"
+    class="muted"
+  >
+    Create an editor account to publish
+    your profile and showcase your work.
+  </p>
 
-        <button
-          class="button primary full"
-          type="submit"
-          id="authSubmit"
-        >
-          Create account
-        </button>
-      </form>
 
-      <button
-        class="text-button"
-        id="toggleAuthMode"
-        type="button"
-      >
-        Already have an account? Log in
-      </button>
+  <form id="authForm">
 
-      <button
-        class="text-button hidden"
-        id="forgotPassword"
-        type="button"
-      >
-        Forgot your password?
-      </button>
+    <label>
+      Email
 
-      <p id="authMessage" class="form-message"></p>
+      <input
+        id="email"
+        type="email"
+        required
+        autocomplete="email"
+      />
+
+    </label>
+
+
+    <label>
+      Password
+
+      <input
+        id="password"
+        type="password"
+        required
+        minlength="6"
+        autocomplete="current-password"
+      />
+
+    </label>
+
+
+    <div id="profileFields">
+
+      <label>
+        Display name
+
+        <input
+          id="displayName"
+          type="text"
+          maxlength="80"
+          placeholder="e.g. Alex Smith"
+        />
+
+      </label>
+
+
+      <label>
+        Speciality
+
+        <input
+          id="speciality"
+          type="text"
+          maxlength="120"
+          placeholder="Video editor • Photo editor • Thumbnails"
+        />
+
+      </label>
+
+
+      <label>
+        Contact email
+
+        <input
+          id="contactEmail"
+          type="email"
+          maxlength="254"
+          placeholder="The email clients should use to contact you"
+          autocomplete="email"
+        />
+
+      </label>
+
     </div>
+
+
+    <button
+      class="button primary full"
+      type="submit"
+      id="authSubmit"
+    >
+      Create account
+    </button>
+
+  </form>
+
+
+  <button
+    class="text-button"
+    id="toggleAuthMode"
+    type="button"
+  >
+    Already have an account? Log in
+  </button>
+
+
+  <button
+    class="text-button hidden"
+    id="forgotPassword"
+    type="button"
+  >
+    Forgot your password?
+  </button>
+
+
+  <p
+    id="authMessage"
+    class="form-message"
+  ></p>
+
+</div>
+```
+
   </div>
 
-  <!-- PASSWORD RESET MODAL -->
+  <!-- =======================================================
+       PASSWORD RESET MODAL
+       ======================================================= -->
 
   <div
     id="resetPasswordModal"
@@ -294,50 +861,87 @@
     aria-modal="true"
     aria-labelledby="resetPasswordTitle"
   >
-    <div class="modal-card">
-      <button class="close-button" id="closeResetPassword">×</button>
 
-      <p class="eyebrow">PASSWORD RESET</p>
+```
+<div class="modal-card">
 
-      <h2 id="resetPasswordTitle">Set a new password</h2>
+  <button
+    class="close-button"
+    id="closeResetPassword"
+  >
+    ×
+  </button>
 
-      <p class="muted">
-        Choose a new password for your Jbad Editing account.
-      </p>
 
-      <form id="resetPasswordForm">
-        <label>
-          New password
-          <input
-            id="newPassword"
-            type="password"
-            required
-            minlength="6"
-            autocomplete="new-password"
-          />
-        </label>
+  <p class="eyebrow">
+    PASSWORD RESET
+  </p>
 
-        <label>
-          Confirm new password
-          <input
-            id="confirmPassword"
-            type="password"
-            required
-            minlength="6"
-            autocomplete="new-password"
-          />
-        </label>
 
-        <button class="button primary full" type="submit">
-          Update password
-        </button>
-      </form>
+  <h2 id="resetPasswordTitle">
+    Set a new password
+  </h2>
 
-      <p id="resetPasswordMessage" class="form-message"></p>
-    </div>
+
+  <p class="muted">
+    Choose a new password for your
+    Jbad Editing account.
+  </p>
+
+
+  <form id="resetPasswordForm">
+
+    <label>
+      New password
+
+      <input
+        id="newPassword"
+        type="password"
+        required
+        minlength="6"
+        autocomplete="new-password"
+      />
+
+    </label>
+
+
+    <label>
+      Confirm new password
+
+      <input
+        id="confirmPassword"
+        type="password"
+        required
+        minlength="6"
+        autocomplete="new-password"
+      />
+
+    </label>
+
+
+    <button
+      class="button primary full"
+      type="submit"
+    >
+      Update password
+    </button>
+
+  </form>
+
+
+  <p
+    id="resetPasswordMessage"
+    class="form-message"
+  ></p>
+
+</div>
+```
+
   </div>
 
-  <!-- DASHBOARD MODAL -->
+  <!-- =======================================================
+       DASHBOARD MODAL
+       ======================================================= -->
 
   <div
     id="dashboardModal"
@@ -346,17 +950,39 @@
     aria-modal="true"
     aria-labelledby="dashboardTitle"
   >
-    <div class="modal-card wide">
-      <button class="close-button" id="closeDashboard">×</button>
 
-      <p class="eyebrow">EDITOR DASHBOARD</p>
+```
+<div class="modal-card wide">
 
-      <h2 id="dashboardTitle">Your editor profile</h2>
+  <button
+    class="close-button"
+    id="closeDashboard"
+  >
+    ×
+  </button>
 
-      <div id="dashboardContent"></div>
-    </div>
+
+  <p class="eyebrow">
+    EDITOR DASHBOARD
+  </p>
+
+
+  <h2 id="dashboardTitle">
+    Your editor profile
+  </h2>
+
+
+  <div id="dashboardContent"></div>
+
+</div>
+```
+
   </div>
 
-  <script type="module" src="app.js"></script>
+  <script
+    type="module"
+    src="app.js"
+  ></script>
+
 </body>
 </html>
