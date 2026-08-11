@@ -1,5 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./supabase-config.js";
+import {
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+} from "./supabase-config.js";
 
 const configured = Boolean(
   SUPABASE_URL &&
@@ -9,7 +12,10 @@ const configured = Boolean(
 );
 
 const supabase = configured
-  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  ? createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    )
   : null;
 
 window.addEventListener("error", (event) =>
@@ -19,18 +25,23 @@ window.addEventListener("error", (event) =>
   )
 );
 
-window.addEventListener("unhandledrejection", (event) =>
-  console.error(
-    "Jbad Editing promise error:",
-    event.reason
-  )
+window.addEventListener(
+  "unhandledrejection",
+  (event) =>
+    console.error(
+      "Jbad Editing promise error:",
+      event.reason
+    )
 );
 
-const $ = (id) => document.getElementById(id);
+const $ = (id) =>
+  document.getElementById(id);
 
 const authModal = $("authModal");
-const dashboardModal = $("dashboardModal");
-const resetPasswordModal = $("resetPasswordModal");
+const dashboardModal =
+  $("dashboardModal");
+const resetPasswordModal =
+  $("resetPasswordModal");
 
 let authMode = "signup";
 
@@ -42,12 +53,21 @@ function siteUrl() {
 }
 
 function showModal(el) {
-  el.classList.remove("hidden");
+  if (el) {
+    el.classList.remove("hidden");
+  }
 }
 
 function hideModal(el) {
-  el.classList.add("hidden");
+  if (el) {
+    el.classList.add("hidden");
+  }
 }
+
+
+/* =========================================================
+   AUTH
+   ========================================================= */
 
 $("closeAuth").onclick = () =>
   hideModal(authModal);
@@ -57,6 +77,7 @@ $("closeDashboard").onclick = () =>
 
 $("closeResetPassword").onclick = () =>
   hideModal(resetPasswordModal);
+
 
 $("joinButton").onclick = () => {
   if (!configured) {
@@ -69,6 +90,7 @@ $("joinButton").onclick = () => {
   setAuthMode("signup");
   showModal(authModal);
 };
+
 
 $("authButton").onclick = async () => {
   if (!configured) {
@@ -89,6 +111,7 @@ $("authButton").onclick = async () => {
     showModal(authModal);
   }
 };
+
 
 function setAuthMode(mode) {
   authMode = mode;
@@ -126,12 +149,14 @@ function setAuthMode(mode) {
   $("authMessage").textContent = "";
 }
 
+
 $("toggleAuthMode").onclick = () =>
   setAuthMode(
     authMode === "login"
       ? "signup"
       : "login"
   );
+
 
 $("forgotPassword").onclick = async () => {
   if (!supabase) return;
@@ -161,13 +186,13 @@ $("forgotPassword").onclick = async () => {
   if (error) {
     $("authMessage").textContent =
       error.message;
-
     return;
   }
 
   $("authMessage").textContent =
     "Recovery email sent. Check your inbox and spam folder.";
 };
+
 
 $("resetPasswordForm").addEventListener(
   "submit",
@@ -185,7 +210,6 @@ $("resetPasswordForm").addEventListener(
     if (password !== confirm) {
       $("resetPasswordMessage").textContent =
         "The passwords do not match.";
-
       return;
     }
 
@@ -200,7 +224,6 @@ $("resetPasswordForm").addEventListener(
     if (error) {
       $("resetPasswordMessage").textContent =
         error.message;
-
       return;
     }
 
@@ -214,6 +237,7 @@ $("resetPasswordForm").addEventListener(
     }, 900);
   }
 );
+
 
 $("authForm").addEventListener(
   "submit",
@@ -241,7 +265,6 @@ $("authForm").addEventListener(
       if (error) {
         $("authMessage").textContent =
           error.message;
-
         return;
       }
 
@@ -278,7 +301,6 @@ $("authForm").addEventListener(
     if (error) {
       $("authMessage").textContent =
         error.message;
-
       return;
     }
 
@@ -295,6 +317,7 @@ $("authForm").addEventListener(
   }
 );
 
+
 async function refreshAuthButton() {
   if (!supabase) return;
 
@@ -308,6 +331,7 @@ async function refreshAuthButton() {
       : "Editor login";
 }
 
+
 supabase?.auth.onAuthStateChange(
   (event) => {
     refreshAuthButton();
@@ -320,6 +344,11 @@ supabase?.auth.onAuthStateChange(
     }
   }
 );
+
+
+/* =========================================================
+   PUBLIC CONTENT
+   ========================================================= */
 
 async function loadPublicContent() {
   if (!configured) {
@@ -354,11 +383,14 @@ async function loadPublicContent() {
   } else {
     $("editorsGrid").innerHTML =
       profiles?.length
-        ? profiles.map(editorCard).join("")
+        ? profiles
+            .map(editorCard)
+            .join("")
         : `<div class="empty-state">
             No editors yet. Be the first to join.
           </div>`;
   }
+
 
   const {
     data: posts,
@@ -380,69 +412,89 @@ async function loadPublicContent() {
   } else {
     $("featuredGrid").innerHTML =
       posts?.length
-        ? posts.map(workCard).join("")
+        ? posts
+            .map(workCard)
+            .join("")
         : `<div class="empty-state">
             No showcase posts yet.
           </div>`;
   }
 }
 
+
 function editorCard(p) {
-  const initials = escapeHtml(
-    (p.display_name || "J")
-      .slice(0, 1)
-      .toUpperCase()
-  );
+  const initials =
+    escapeHtml(
+      (p.display_name || "J")
+        .slice(0, 1)
+        .toUpperCase()
+    );
 
   return `
     <article class="editor-card">
+
       <div class="editor-avatar">
         ${
           p.avatar_url
-            ? `<img
+            ? `
+              <img
                 src="${safeUrl(p.avatar_url)}"
                 alt=""
                 style="width:100%;height:100%;object-fit:cover"
-              >`
+              >
+            `
             : initials
         }
       </div>
 
       <div class="editor-info">
+
         <h3>
-          ${escapeHtml(p.display_name)}
+          ${escapeHtml(
+            p.display_name
+          )}
         </h3>
 
         <p>
           ${escapeHtml(
-            p.speciality || "Editor"
+            p.speciality ||
+              "Editor"
           )}
         </p>
 
         ${
           p.bio
-            ? `<p class="small">
+            ? `
+              <p class="small">
                 ${escapeHtml(p.bio)}
-              </p>`
+              </p>
+            `
             : ""
         }
 
         ${
           p.website_url
-            ? `<a
+            ? `
+              <a
                 class="small"
                 target="_blank"
                 rel="noopener"
-                href="${safeUrl(p.website_url)}"
+                href="${safeUrl(
+                  p.website_url
+                )}"
               >
                 Portfolio ↗
-              </a>`
+              </a>
+            `
             : ""
         }
+
       </div>
+
     </article>
   `;
 }
+
 
 function workCard(p) {
   const editor =
@@ -451,24 +503,32 @@ function workCard(p) {
 
   const media =
     p.media_type === "video"
-      ? `<video
+      ? `
+        <video
           src="${safeUrl(p.media_url)}"
           controls
           preload="metadata"
-        ></video>`
-      : `<img
+        ></video>
+      `
+      : `
+        <img
           src="${safeUrl(p.media_url)}"
-          alt="${escapeHtml(p.title)}"
+          alt="${escapeHtml(
+            p.title
+          )}"
           loading="lazy"
-        >`;
+        >
+      `;
 
   return `
     <article class="work-card">
+
       <div class="work-media">
         ${media}
       </div>
 
       <div class="work-info">
+
         <h3>
           ${escapeHtml(p.title)}
         </h3>
@@ -479,14 +539,18 @@ function workCard(p) {
 
         ${
           p.description
-            ? `<p class="small">
+            ? `
+              <p class="small">
                 ${escapeHtml(
                   p.description
                 )}
-              </p>`
+              </p>
+            `
             : ""
         }
+
       </div>
+
     </article>
   `;
 }
@@ -509,13 +573,17 @@ async function openDashboard() {
     return;
   }
 
+
   const {
     data: profile,
     error: profileError
   } = await supabase
     .from("profiles")
     .select("*")
-    .eq("id", session.user.id)
+    .eq(
+      "id",
+      session.user.id
+    )
     .single();
 
   if (profileError) {
@@ -524,6 +592,7 @@ async function openDashboard() {
       profileError
     );
   }
+
 
   const {
     data: posts,
@@ -546,66 +615,85 @@ async function openDashboard() {
     );
   }
 
+
   $("dashboardContent").innerHTML = `
 
-    <form id="profileForm" class="dashboard-grid">
+    <form
+      id="profileForm"
+      class="dashboard-grid"
+    >
 
       <label>
         Display name
+
         <input
           id="dName"
           value="${escapeAttr(
-            profile?.display_name || ""
+            profile?.display_name ||
+              ""
           )}"
           maxlength="80"
           required
         >
       </label>
 
+
       <label>
         Speciality
+
         <input
           id="dSpeciality"
           value="${escapeAttr(
-            profile?.speciality || ""
+            profile?.speciality ||
+              ""
           )}"
           maxlength="120"
         >
       </label>
 
+
       <label class="full-row">
         Bio
+
         <textarea
           id="dBio"
           maxlength="500"
         >${escapeHtml(
           profile?.bio || ""
         )}</textarea>
+
       </label>
+
 
       <label>
         Website / portfolio URL
+
         <input
           id="dWebsite"
           type="url"
           value="${escapeAttr(
-            profile?.website_url || ""
+            profile?.website_url ||
+              ""
           )}"
           placeholder="https://…"
         >
       </label>
 
+
       <label>
         Avatar URL
+
         <input
           id="dAvatar"
           type="url"
           value="${escapeAttr(
-            profile?.avatar_url || ""
+            profile?.avatar_url ||
+              ""
           )}"
           placeholder="https://…"
         >
       </label>
+
 
       <button
         class="button primary"
@@ -613,6 +701,7 @@ async function openDashboard() {
       >
         Save profile
       </button>
+
 
       <button
         class="button danger"
@@ -625,13 +714,15 @@ async function openDashboard() {
     </form>
 
 
-    <!-- STRIPE CONNECT -->
+    <!-- =====================================================
+         STRIPE
+         ===================================================== -->
 
     <div
       id="stripePanel"
       style="
         margin-top:30px;
-        padding:24px;
+        padding:25px;
         border:1px solid #ddd;
         background:#fff;
       "
@@ -641,14 +732,17 @@ async function openDashboard() {
         PAYMENTS
       </p>
 
-      <h3 style="margin:0 0 8px">
+      <h3
+        style="
+          margin:0 0 8px;
+        "
+      >
         Stripe payments
       </h3>
 
       <p
         id="stripeStatus"
         class="muted"
-        style="margin-bottom:18px"
       >
         Checking Stripe connection…
       </p>
@@ -658,13 +752,12 @@ async function openDashboard() {
         type="button"
         id="stripeButton"
       >
-        Connect Stripe account
+        Checking Stripe…
       </button>
 
       <p
         id="stripeMessage"
         class="form-message"
-        style="margin-top:12px"
       ></p>
 
     </div>
@@ -674,7 +767,7 @@ async function openDashboard() {
       style="
         border:0;
         border-top:1px solid #ddd;
-        margin:35px 0
+        margin:35px 0;
       "
     >
 
@@ -683,6 +776,7 @@ async function openDashboard() {
       Publish showcase work
     </h3>
 
+
     <form
       id="postForm"
       class="dashboard-grid"
@@ -690,6 +784,7 @@ async function openDashboard() {
 
       <label>
         Title
+
         <input
           id="postTitle"
           maxlength="100"
@@ -697,6 +792,7 @@ async function openDashboard() {
           placeholder="e.g. Football montage"
         >
       </label>
+
 
       <label>
         Type
@@ -706,7 +802,7 @@ async function openDashboard() {
           style="
             padding:12px;
             border:1px solid #ccc;
-            border-radius:8px
+            border-radius:8px;
           "
         >
           <option value="image">
@@ -720,6 +816,7 @@ async function openDashboard() {
 
       </label>
 
+
       <label class="full-row">
         Description
 
@@ -728,7 +825,9 @@ async function openDashboard() {
           maxlength="500"
           placeholder="Tell people about the edit"
         ></textarea>
+
       </label>
+
 
       <label class="full-row">
         Media file
@@ -748,6 +847,7 @@ async function openDashboard() {
           required
         >
       </label>
+
 
       <button
         class="button primary"
@@ -769,6 +869,7 @@ async function openDashboard() {
       Your posts
     </h3>
 
+
     <div class="post-list">
 
       ${
@@ -779,6 +880,7 @@ async function openDashboard() {
                   <div class="post-row">
 
                     <div>
+
                       <b>
                         ${escapeHtml(
                           p.title
@@ -790,7 +892,9 @@ async function openDashboard() {
                           p.media_type
                         )}
                       </div>
+
                     </div>
+
 
                     <button
                       class="button danger delete-post"
@@ -818,15 +922,17 @@ async function openDashboard() {
     </div>
   `;
 
+
   showModal(dashboardModal);
 
 
   /* =========================================================
-     PROFILE
+     SAVE PROFILE
      ========================================================= */
 
   $("profileForm").onsubmit =
     async (e) => {
+
       e.preventDefault();
 
       const {
@@ -835,24 +941,35 @@ async function openDashboard() {
         .from("profiles")
         .update({
           display_name:
-            $("dName").value.trim(),
+            $("dName")
+              .value
+              .trim(),
 
           speciality:
-            $("dSpeciality").value.trim(),
+            $("dSpeciality")
+              .value
+              .trim(),
 
           bio:
-            $("dBio").value.trim(),
+            $("dBio")
+              .value
+              .trim(),
 
           website_url:
-            $("dWebsite").value.trim() ||
+            $("dWebsite")
+              .value
+              .trim() ||
             null,
 
           avatar_url:
-            $("dAvatar").value.trim() ||
+            $("dAvatar")
+              .value
+              .trim() ||
             null,
 
           updated_at:
-            new Date().toISOString()
+            new Date()
+              .toISOString()
         })
         .eq(
           "id",
@@ -872,11 +989,12 @@ async function openDashboard() {
 
 
   /* =========================================================
-     LOGOUT
+     LOG OUT
      ========================================================= */
 
   $("logoutButton").onclick =
     async () => {
+
       await supabase.auth.signOut();
 
       hideModal(
@@ -906,9 +1024,11 @@ async function openDashboard() {
     stripeStatus.textContent =
       "Checking Stripe connection…";
 
-    stripeMessage.textContent = "";
+    stripeMessage.textContent =
+      "";
 
-    stripeButton.disabled = true;
+    stripeButton.disabled =
+      true;
 
     stripeButton.textContent =
       "Checking Stripe…";
@@ -917,9 +1037,7 @@ async function openDashboard() {
     try {
 
       /*
-       * Supabase automatically uses
-       * the currently logged-in user's
-       * session when invoking the
+       * Call the deployed Supabase
        * Edge Function.
        */
 
@@ -941,10 +1059,14 @@ async function openDashboard() {
       );
 
 
+      /*
+       * Supabase itself returned an error.
+       */
+
       if (error) {
 
         console.error(
-          "Stripe Connect function error:",
+          "Stripe Connect error:",
           error
         );
 
@@ -955,6 +1077,11 @@ async function openDashboard() {
       }
 
 
+      /*
+       * Make sure the function
+       * actually returned something.
+       */
+
       if (!data) {
 
         throw new Error(
@@ -964,20 +1091,33 @@ async function openDashboard() {
 
 
       /*
-       * ACCOUNT IS FULLY CONNECTED
+       * =====================================================
+       * FULLY CONNECTED
+       * =====================================================
+       *
+       * This is the important part for your current account.
+       *
+       * Stripe currently shows your account as:
+       * Enabled
+       * Payments active
+       * Payouts active
+       *
+       * Therefore we do NOT need an onboarding link.
        */
 
       if (
         data.connected === true ||
         (
           data.chargesEnabled === true &&
-          data.payoutsEnabled === true &&
-          data.onboardingComplete === true
+          data.payoutsEnabled === true
         )
       ) {
 
         stripeStatus.textContent =
-          "✓ Stripe connected — payments and payouts are active.";
+          "Stripe is connected and ready.";
+
+        stripeMessage.textContent =
+          "";
 
         stripeButton.textContent =
           "Stripe connected";
@@ -990,16 +1130,22 @@ async function openDashboard() {
 
 
       /*
-       * STRIPE STILL NEEDS INFORMATION
+       * =====================================================
+       * NEEDS MORE STRIPE SETUP
+       * =====================================================
        */
 
       if (
-        data.url &&
-        typeof data.url === "string"
+        typeof data.url ===
+          "string" &&
+        data.url.length > 0
       ) {
 
         stripeStatus.textContent =
           "Your Stripe account needs some additional setup.";
+
+        stripeMessage.textContent =
+          "";
 
         stripeButton.textContent =
           "Finish Stripe setup";
@@ -1018,39 +1164,26 @@ async function openDashboard() {
 
 
       /*
-       * STRIPE ACCOUNT EXISTS BUT
-       * DIDN'T PROVIDE AN ONBOARDING URL.
-       */
-
-      if (
-        data.accountId &&
-        data.chargesEnabled === true &&
-        data.payoutsEnabled === true
-      ) {
-
-        stripeStatus.textContent =
-          "✓ Stripe connected — payments and payouts are active.";
-
-        stripeButton.textContent =
-          "Stripe connected";
-
-        stripeButton.disabled =
-          true;
-
-        return;
-      }
-
-
-      /*
-       * SOMETHING ELSE HAPPENED
+       * =====================================================
+       * NO URL
+       * =====================================================
+       *
+       * Do NOT display:
+       * "Stripe did not return an onboarding link."
+       *
+       * That message was confusing because an already
+       * connected account does not need an onboarding link.
        */
 
       stripeStatus.textContent =
         data.message ||
-        "Stripe setup is not complete.";
+        "Stripe setup is still being processed.";
+
+      stripeMessage.textContent =
+        "";
 
       stripeButton.textContent =
-        "Try Stripe setup again";
+        "Check Stripe again";
 
       stripeButton.disabled =
         false;
@@ -1073,7 +1206,7 @@ async function openDashboard() {
         "Something went wrong.";
 
       stripeButton.textContent =
-        "Connect Stripe account";
+        "Check Stripe again";
 
       stripeButton.disabled =
         false;
@@ -1085,8 +1218,7 @@ async function openDashboard() {
 
 
   /*
-   * Start the Stripe check as soon
-   * as the dashboard opens.
+   * Start Stripe status check.
    */
 
   stripeButton.onclick =
@@ -1110,9 +1242,11 @@ async function openDashboard() {
       const message =
         $("postMessage");
 
+
       if (!file) {
         return;
       }
+
 
       if (
         file.size >
@@ -1125,8 +1259,10 @@ async function openDashboard() {
         return;
       }
 
+
       message.textContent =
         "Uploading…";
+
 
       const type =
         $("postType").value;
@@ -1203,7 +1339,9 @@ async function openDashboard() {
       } =
         supabase.storage
           .from("portfolio")
-          .getPublicUrl(path);
+          .getPublicUrl(
+            path
+          );
 
 
       const {
@@ -1212,6 +1350,7 @@ async function openDashboard() {
         await supabase
           .from("editor_posts")
           .insert({
+
             editor_id:
               session.user.id,
 
@@ -1230,6 +1369,7 @@ async function openDashboard() {
 
             media_type:
               type
+
           });
 
 
@@ -1237,7 +1377,9 @@ async function openDashboard() {
 
         await supabase.storage
           .from("portfolio")
-          .remove([path]);
+          .remove([
+            path
+          ]);
 
         message.textContent =
           insertError.message;
@@ -1248,6 +1390,7 @@ async function openDashboard() {
 
       message.textContent =
         "Published!";
+
 
       await openDashboard();
 
@@ -1264,8 +1407,9 @@ async function openDashboard() {
       ".delete-post"
     )
     .forEach(
-      (btn) =>
-        (btn.onclick =
+      (btn) => {
+
+        btn.onclick =
           async () => {
 
             if (
@@ -1318,13 +1462,15 @@ async function openDashboard() {
 
             await loadPublicContent();
 
-          })
+          };
+
+      }
     );
 }
 
 
 /* =========================================================
-   SECURITY / URL HELPERS
+   HELPERS
    ========================================================= */
 
 function safeUrl(value) {
@@ -1354,7 +1500,9 @@ function safeUrl(value) {
 }
 
 
-function escapeHtml(value = "") {
+function escapeHtml(
+  value = ""
+) {
 
   return String(value).replace(
     /[&<>"']/g,
@@ -1371,7 +1519,9 @@ function escapeHtml(value = "") {
 }
 
 
-function escapeAttr(value = "") {
+function escapeAttr(
+  value = ""
+) {
 
   return escapeHtml(value);
 
@@ -1394,7 +1544,9 @@ refreshAuthButton();
 $("menuButton").onclick = () => {
 
   const nav =
-    document.querySelector("nav");
+    document.querySelector(
+      "nav"
+    );
 
   nav.style.display =
     nav.style.display === "flex"
@@ -1424,13 +1576,9 @@ $("menuButton").onclick = () => {
 };
 
 
-/*
- * If Supabase redirects back here
- * after a password-recovery email,
- * the client emits PASSWORD_RECOVERY
- * and the reset form above is shown
- * automatically.
- */
+/* =========================================================
+   PASSWORD RECOVERY
+   ========================================================= */
 
 if (configured) {
 
