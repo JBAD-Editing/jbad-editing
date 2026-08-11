@@ -16,6 +16,7 @@ const supabase = configured
   : null;
 
 const $ = (id) => document.getElementById(id);
+
 const authModal = $("authModal");
 const dashboardModal = $("dashboardModal");
 const resetPasswordModal = $("resetPasswordModal");
@@ -33,15 +34,12 @@ window.addEventListener("error", (event) => {
   );
 });
 
-window.addEventListener(
-  "unhandledrejection",
-  (event) => {
-    console.error(
-      "Jbad Editing promise error:",
-      event.reason
-    );
-  }
-);
+window.addEventListener("unhandledrejection", (event) => {
+  console.error(
+    "Jbad Editing promise error:",
+    event.reason
+  );
+});
 
 /* =========================================================
    HELPERS
@@ -108,62 +106,8 @@ function escapeAttr(value = "") {
 }
 
 /* =========================================================
-   AUTH MODAL
+   AUTH MODE
    ========================================================= */
-
-if ($("closeAuth")) {
-  $("closeAuth").onclick = () => {
-    hideModal(authModal);
-  };
-}
-
-if ($("closeDashboard")) {
-  $("closeDashboard").onclick = () => {
-    hideModal(dashboardModal);
-  };
-}
-
-if ($("closeResetPassword")) {
-  $("closeResetPassword").onclick = () => {
-    hideModal(resetPasswordModal);
-  };
-}
-
-if ($("joinButton")) {
-  $("joinButton").onclick = () => {
-    if (!configured) {
-      alert(
-        "Jbad Editing is not connected to Supabase yet. Check supabase-config.js."
-      );
-      return;
-    }
-
-    setAuthMode("signup");
-    showModal(authModal);
-  };
-}
-
-if ($("authButton")) {
-  $("authButton").onclick = async () => {
-    if (!configured) {
-      alert(
-        "Jbad Editing is not connected to Supabase yet. Check supabase-config.js."
-      );
-      return;
-    }
-
-    const {
-      data: { session }
-    } = await supabase.auth.getSession();
-
-    if (session) {
-      openDashboard();
-    } else {
-      setAuthMode("login");
-      showModal(authModal);
-    }
-  };
-}
 
 function setAuthMode(mode) {
   authMode = mode;
@@ -215,6 +159,110 @@ function setAuthMode(mode) {
   }
 }
 
+/* =========================================================
+   AUTH MODAL BUTTONS
+   ========================================================= */
+
+if ($("closeAuth")) {
+  $("closeAuth").onclick = () => {
+    hideModal(authModal);
+  };
+}
+
+if ($("closeDashboard")) {
+  $("closeDashboard").onclick = () => {
+    hideModal(dashboardModal);
+  };
+}
+
+if ($("closeResetPassword")) {
+  $("closeResetPassword").onclick = () => {
+    hideModal(resetPasswordModal);
+  };
+}
+
+if ($("joinButton")) {
+  $("joinButton").onclick = () => {
+    if (!configured) {
+      alert(
+        "Jbad Editing is not connected to Supabase yet. Check supabase-config.js."
+      );
+      return;
+    }
+
+    setAuthMode("signup");
+    showModal(authModal);
+  };
+}
+
+/*
+ * IMPORTANT:
+ * Editor Login is handled with event delegation below.
+ * This means it still works if the button is rendered/re-rendered
+ * after app.js initially loads.
+ */
+
+document.addEventListener("click", async (event) => {
+  const authButton =
+    event.target.closest("#authButton");
+
+  if (!authButton) {
+    return;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  console.log(
+    "Editor Login button clicked"
+  );
+
+  if (!configured || !supabase) {
+    alert(
+      "Jbad Editing is not connected to Supabase yet. Check supabase-config.js."
+    );
+    return;
+  }
+
+  try {
+    const {
+      data: { session },
+      error
+    } = await supabase.auth.getSession();
+
+    if (error) {
+      console.error(
+        "Supabase session error:",
+        error
+      );
+
+      alert(
+        "Unable to check your login. Please try again."
+      );
+
+      return;
+    }
+
+    if (session) {
+      await openDashboard();
+    } else {
+      setAuthMode("login");
+      showModal(authModal);
+    }
+
+  } catch (error) {
+    console.error(
+      "Editor login error:",
+      error
+    );
+
+    alert(
+      error?.message ||
+      "Unable to open the editor login."
+    );
+  }
+});
+
 if ($("toggleAuthMode")) {
   $("toggleAuthMode").onclick = () => {
     setAuthMode(
@@ -241,7 +289,9 @@ if ($("forgotPassword")) {
     if (!email) {
       $("authMessage").textContent =
         "Enter your email address first.";
+
       $("email").focus();
+
       return;
     }
 
@@ -259,6 +309,7 @@ if ($("forgotPassword")) {
     if (error) {
       $("authMessage").textContent =
         error.message;
+
       return;
     }
 
@@ -286,6 +337,7 @@ if ($("resetPasswordForm")) {
       if (password !== confirmPassword) {
         $("resetPasswordMessage").textContent =
           "The passwords do not match.";
+
         return;
       }
 
@@ -300,6 +352,7 @@ if ($("resetPasswordForm")) {
       if (error) {
         $("resetPasswordMessage").textContent =
           error.message;
+
         return;
       }
 
@@ -316,7 +369,7 @@ if ($("resetPasswordForm")) {
 }
 
 /* =========================================================
-   SIGN UP / LOGIN
+   SIGN UP / LOGIN FORM
    ========================================================= */
 
 if ($("authForm")) {
@@ -328,6 +381,7 @@ if ($("authForm")) {
       if (!supabase) {
         $("authMessage").textContent =
           "Supabase is not configured.";
+
         return;
       }
 
@@ -340,8 +394,14 @@ if ($("authForm")) {
       $("authMessage").textContent =
         "Working...";
 
+      /* -------------------------
+         LOGIN
+      ------------------------- */
+
       if (authMode === "login") {
-        const { error } =
+        const {
+          error
+        } =
           await supabase.auth.signInWithPassword(
             {
               email,
@@ -352,6 +412,7 @@ if ($("authForm")) {
         if (error) {
           $("authMessage").textContent =
             error.message;
+
           return;
         }
 
@@ -363,19 +424,26 @@ if ($("authForm")) {
         return;
       }
 
+      /* -------------------------
+         SIGN UP
+      ------------------------- */
+
       const displayName =
-        $("displayName").value.trim() ||
+        $("displayName")?.value.trim() ||
         "Jbad Editor";
 
       const speciality =
-        $("speciality").value.trim() ||
+        $("speciality")?.value.trim() ||
         "Video & Photo Editor";
 
       const contactEmail =
         $("contactEmail")?.value.trim() ||
         email;
 
-      const { data, error } =
+      const {
+        data,
+        error
+      } =
         await supabase.auth.signUp({
           email,
           password,
@@ -383,7 +451,9 @@ if ($("authForm")) {
             data: {
               display_name:
                 displayName,
+
               speciality,
+
               contact_email:
                 contactEmail
             }
@@ -393,6 +463,7 @@ if ($("authForm")) {
       if (error) {
         $("authMessage").textContent =
           error.message;
+
         return;
       }
 
@@ -401,6 +472,7 @@ if ($("authForm")) {
 
         await refreshAuthButton();
         await openDashboard();
+
       } else {
         $("authMessage").textContent =
           "Account created. Check your email to confirm your account, then log in.";
@@ -410,7 +482,7 @@ if ($("authForm")) {
 }
 
 /* =========================================================
-   AUTH BUTTON
+   AUTH BUTTON TEXT
    ========================================================= */
 
 async function refreshAuthButton() {
@@ -423,7 +495,8 @@ async function refreshAuthButton() {
 
   const {
     data: { session }
-  } = await supabase.auth.getSession();
+  } =
+    await supabase.auth.getSession();
 
   $("authButton").textContent =
     session
@@ -440,7 +513,9 @@ if (supabase) {
         event ===
         "PASSWORD_RECOVERY"
       ) {
-        showModal(resetPasswordModal);
+        showModal(
+          resetPasswordModal
+        );
 
         if ($("resetPasswordMessage")) {
           $("resetPasswordMessage").textContent =
@@ -501,6 +576,7 @@ async function loadPublicContent() {
         </div>
       `;
     }
+
   } else if ($("editorsGrid")) {
     $("editorsGrid").innerHTML =
       profiles &&
@@ -542,6 +618,7 @@ async function loadPublicContent() {
         </div>
       `;
     }
+
   } else if ($("featuredGrid")) {
     $("featuredGrid").innerHTML =
       posts &&
@@ -570,7 +647,9 @@ function editorCard(profile) {
 
   return `
     <article class="editor-card">
+
       <div class="editor-avatar">
+
         ${
           profile.avatar_url
             ? `
@@ -579,11 +658,16 @@ function editorCard(profile) {
                   profile.avatar_url
                 )}"
                 alt=""
-                style="width:100%;height:100%;object-fit:cover"
+                style="
+                  width:100%;
+                  height:100%;
+                  object-fit:cover
+                "
               >
             `
             : initials
         }
+
       </div>
 
       <div class="editor-info">
@@ -591,14 +675,14 @@ function editorCard(profile) {
         <h3>
           ${escapeHtml(
             profile.display_name ||
-              "Jbad Editor"
+            "Jbad Editor"
           )}
         </h3>
 
         <p>
           ${escapeHtml(
             profile.speciality ||
-              "Editor"
+            "Editor"
           )}
         </p>
 
@@ -632,6 +716,7 @@ function editorCard(profile) {
         }
 
       </div>
+
     </article>
   `;
 }
@@ -724,11 +809,12 @@ async function openDashboard() {
   const {
     data: profile,
     error: profileError
-  } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", session.user.id)
-    .single();
+  } =
+    await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", session.user.id)
+      .single();
 
   if (profileError) {
     console.error(
@@ -740,16 +826,17 @@ async function openDashboard() {
   const {
     data: posts,
     error: postsError
-  } = await supabase
-    .from("editor_posts")
-    .select("*")
-    .eq(
-      "editor_id",
-      session.user.id
-    )
-    .order("created_at", {
-      ascending: false
-    });
+  } =
+    await supabase
+      .from("editor_posts")
+      .select("*")
+      .eq(
+        "editor_id",
+        session.user.id
+      )
+      .order("created_at", {
+        ascending: false
+      });
 
   if (postsError) {
     console.error(
@@ -774,11 +861,12 @@ async function openDashboard() {
 
       <label>
         Display name
+
         <input
           id="dName"
           value="${escapeAttr(
             profile?.display_name ||
-              ""
+            ""
           )}"
           maxlength="80"
           required
@@ -792,7 +880,7 @@ async function openDashboard() {
           id="dSpeciality"
           value="${escapeAttr(
             profile?.speciality ||
-              ""
+            ""
           )}"
           maxlength="120"
         >
@@ -800,6 +888,7 @@ async function openDashboard() {
 
       <label class="full-row">
         Bio
+
         <textarea
           id="dBio"
           maxlength="500"
@@ -816,7 +905,7 @@ async function openDashboard() {
           type="url"
           value="${escapeAttr(
             profile?.website_url ||
-              ""
+            ""
           )}"
           placeholder="https://..."
         >
@@ -830,7 +919,7 @@ async function openDashboard() {
           type="url"
           value="${escapeAttr(
             profile?.avatar_url ||
-              ""
+            ""
           )}"
           placeholder="https://..."
         >
@@ -881,6 +970,44 @@ async function openDashboard() {
         Available Jbad Editing account funds.
       </p>
 
+      <div
+        style="
+          margin-top:20px;
+          padding-top:20px;
+          border-top:1px solid #eee;
+        "
+      >
+
+        <div
+          style="
+            padding:16px;
+            background:#fff8e6;
+            border:1px solid #ead9a0;
+            border-radius:10px;
+            margin-bottom:20px;
+          "
+        >
+
+          <strong>
+            Important funds disclaimer
+          </strong>
+
+          <p
+            style="
+              margin:8px 0 0;
+              line-height:1.6;
+            "
+          >
+            Funds added to your Jbad Editing account
+            are for use on the Jbad Editing platform only.
+            Account funds are non-withdrawable and
+            non-refundable once added.
+          </p>
+
+        </div>
+
+      </div>
+
     </div>
 
     <div
@@ -905,6 +1032,23 @@ async function openDashboard() {
       <p class="muted">
         Add money securely to your Jbad Editing account.
       </p>
+
+      <div
+        style="
+          margin:15px 0;
+          padding:14px;
+          background:#fff8e6;
+          border:1px solid #ead9a0;
+          border-radius:8px;
+          font-size:14px;
+          line-height:1.5;
+        "
+      >
+        <strong>Before adding funds:</strong>
+        Funds added to your account are
+        <strong>non-withdrawable and non-refundable</strong>.
+        They can only be used for services on Jbad Editing.
+      </div>
 
       <label>
         Amount
@@ -932,38 +1076,6 @@ async function openDashboard() {
       >
         Secure Payment
       </button>
-
-      <div
-        style="
-          margin-top:15px;
-          padding:14px 16px;
-          border:1px solid #ddd;
-          border-radius:8px;
-          background:#f7f7f5;
-          font-size:13px;
-          line-height:1.5;
-        "
-      >
-
-        <strong
-          style="
-            display:block;
-            margin-bottom:5px;
-            font-size:14px;
-          "
-        >
-          Important: Account Funds
-        </strong>
-
-        <p style="margin:0;">
-          By adding funds to your Jbad Editing account, you acknowledge
-          that funds added to your account balance are non-refundable
-          and non-withdrawable. Account funds may only be used for
-          eligible Jbad Editing services and cannot be transferred to
-          a bank account or withdrawn as cash.
-        </p>
-
-      </div>
 
       <p
         id="paymentMessage"
@@ -1053,6 +1165,7 @@ async function openDashboard() {
             border-radius:8px;
           "
         >
+
           <option value="image">
             Image
           </option>
@@ -1060,6 +1173,7 @@ async function openDashboard() {
           <option value="video">
             Video
           </option>
+
         </select>
       </label>
 
@@ -1231,7 +1345,7 @@ async function openDashboard() {
     };
 
   /* =======================================================
-     STRIPE CONNECT
+     STRIPE CONNECT STATUS
      ======================================================= */
 
   const stripeStatus =
@@ -1600,10 +1714,6 @@ async function startSecurePayment() {
       "Supabase is not connected."
     );
 
-    console.error(
-      "Supabase client is not configured."
-    );
-
     return;
   }
 
@@ -1623,10 +1733,6 @@ async function startSecurePayment() {
     );
 
   if (!amountInput) {
-    console.error(
-      "Could not find #fundAmount"
-    );
-
     alert(
       "The payment form could not be found."
     );
@@ -1638,11 +1744,6 @@ async function startSecurePayment() {
     Number(
       amountInput.value
     );
-
-  console.log(
-    "Payment amount entered:",
-    pounds
-  );
 
   if (
     !Number.isFinite(
@@ -1680,36 +1781,15 @@ async function startSecurePayment() {
   const total =
     amount + jbadFee;
 
-  console.log(
-    "Base amount:",
-    amount
-  );
-
-  console.log(
-    "Jbad fee:",
-    jbadFee
-  );
-
-  console.log(
-    "Total:",
-    total
-  );
-
   if (message) {
     message.textContent =
       `Account funds: £${(
         amount / 100
-      ).toFixed(
-        2
-      )} + 3.5% fee (£${(
+      ).toFixed(2)} + 3.5% fee (£${(
         jbadFee / 100
-      ).toFixed(
-        2
-      )}) = £${(
+      ).toFixed(2)}) = £${(
         total / 100
-      ).toFixed(
-        2
-      )}. Opening Stripe...`;
+      ).toFixed(2)}. Opening Stripe...`;
   }
 
   if (button) {
@@ -1719,10 +1799,6 @@ async function startSecurePayment() {
     button.textContent =
       "Opening Stripe...";
   }
-
-  console.log(
-    "Calling stripe-payment Edge Function..."
-  );
 
   try {
     const response =
@@ -1747,11 +1823,6 @@ async function startSecurePayment() {
       response.error;
 
     if (error) {
-      console.error(
-        "stripe-payment error:",
-        error
-      );
-
       throw new Error(
         error.message ||
         "The stripe-payment function returned an error."
@@ -1763,11 +1834,6 @@ async function startSecurePayment() {
         "The stripe-payment function returned no data."
       );
     }
-
-    console.log(
-      "stripe-payment data:",
-      data
-    );
 
     if (data.error) {
       throw new Error(
@@ -1785,10 +1851,6 @@ async function startSecurePayment() {
         "Stripe did not return a checkout URL."
       );
     }
-
-    console.log(
-      "Stripe checkout URL received."
-    );
 
     if (message) {
       message.textContent =
@@ -1830,7 +1892,7 @@ async function startSecurePayment() {
 }
 
 /* =========================================================
-   GLOBAL PAYMENT BUTTON
+   SECURE PAYMENT CLICK HANDLER
    ========================================================= */
 
 document.addEventListener(
@@ -1846,10 +1908,6 @@ document.addEventListener(
     }
 
     event.preventDefault();
-
-    console.log(
-      "GLOBAL SECURE PAYMENT CLICK DETECTED"
-    );
 
     startSecurePayment();
   }
